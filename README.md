@@ -1,2 +1,2 @@
-# Kyber_16
+# Kyber_16w
 16-way
