@@ -1,3 +1,5 @@
 .vscode
 all
 *.txt
+poly.c
+poly.h

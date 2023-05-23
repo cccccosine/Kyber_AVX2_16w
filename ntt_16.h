@@ -16,4 +16,7 @@ void basemul_avx_16(__m256i *r,
 #define invntt_avx_16 KYBER_NAMESPACE(invntt_avx_16)
 void invntt_avx_16(__m256i *r, const __m256i *qdata);
 
+#define nttunpack_avx_16 KYBER_NAMESPACE(nttunpack_avx_16)
+void nttunpack_avx_16(__m256i *r);
+
 #endif
