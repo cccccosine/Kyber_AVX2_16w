@@ -291,16 +291,10 @@ unsigned int rej_uniform_avx(int16_t * restrict r, const uint8_t *buf)
 
   ctr = pos = 0;
   while(ctr <= KYBER_N*16 - 32 && pos <= REJ_UNIFORM_AVX_BUFLEN*16 - 48) {   //REJ_UNIFORM_AVX_BUFLEN = 3*168
-    // f0 = [f0-0 f0-1 f0-2 f0-3], f1 = [f1-0 f1-1 f1-2 f1-3]
     f0 = _mm256_loadu_si256((__m256i *)&buf[pos]);
     f1 = _mm256_loadu_si256((__m256i *)&buf[pos+24]);
-    // 0x94 = 10 01 01 00 = 2 1 1 0
-    // f0 = [f0-0 f0-1 f0-1 f0-2], f1 = [f1-0 f1-1 f1-1 f1-2]
     f0 = _mm256_permute4x64_epi64(f0, 0x94);
     f1 = _mm256_permute4x64_epi64(f1, 0x94);
-    /*
-    * f0 = [f0-0 f0-1 ... f0-]
-    */
     f0 = _mm256_shuffle_epi8(f0, idx8);
     f1 = _mm256_shuffle_epi8(f1, idx8);
     g0 = _mm256_srli_epi16(f0, 4);
