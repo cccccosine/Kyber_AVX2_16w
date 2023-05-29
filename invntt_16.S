@@ -1,4 +1,4 @@
-#include "ntt_16_consts.h"
+#include "consts_16.h"
 .include "fq.inc"
 
 .macro butterfly0 rl0,rl1,rl2,rl3,rh0,rh1,rh2,rh3,zl0=2,zl1=2,zh0=3,zh1=3,off

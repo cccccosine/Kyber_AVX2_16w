@@ -1,4 +1,4 @@
-#include "ntt_16_consts.h"
+#include "consts_16.h"
 .include "fq.inc"
 
 
@@ -335,6 +335,22 @@ call		nttunpack256_avx
 
 ret
 
+
+ntttobytes128_avx:
+
+
+ret
+
+
+.global cdecl(ntttobytes_avx)
+cdecl(ntttobytes_avx):
+#consts
+vmovdqa		_16XQ_16*2(%rdx),%ymm0
+call		ntttobytes128_avx
+add		$256,%rsi
+add		$192,%rdi
+call		ntttobytes128_avx
+ret
 
 
 

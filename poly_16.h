@@ -31,10 +31,10 @@ void poly_getnoise_eta2(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t non
 
 #ifndef KYBER_90S
 #define poly_getnoise_eta1_4x KYBER_NAMESPACE(poly_getnoise_eta2_4x)
-void poly_getnoise_eta1_4x(poly *r0,
-                           poly *r1,
-                           poly *r2,
-                           poly *r3,
+void poly_getnoise_eta1_4x(poly_16 *r0,
+                           poly_16 *r1,
+                           poly_16 *r2,
+                           poly_16 *r3,
                            const uint8_t seed[32],
                            uint8_t nonce0,
                            uint8_t nonce1,
@@ -57,21 +57,21 @@ void poly_getnoise_eta1122_4x(poly *r0,
 
 
 #define poly_ntt KYBER_NAMESPACE(poly_ntt)
-void poly_ntt(poly *r);
+void poly_ntt(poly_16 *r);
 #define poly_invntt_tomont KYBER_NAMESPACE(poly_invntt_tomont)
 void poly_invntt_tomont(poly *r);
 #define poly_nttunpack KYBER_NAMESPACE(poly_nttunpack)
 void poly_nttunpack(poly_16 *r);
 #define poly_basemul_montgomery KYBER_NAMESPACE(poly_basemul_montgomery)
-void poly_basemul_montgomery(poly *r, const poly *a, const poly *b);
+void poly_basemul_montgomery(poly_16 *r, const poly_16 *a, const poly_16 *b);
 #define poly_tomont KYBER_NAMESPACE(poly_tomont)
-void poly_tomont(poly *r);
+void poly_tomont(poly_16 *r);
 
 #define poly_reduce KYBER_NAMESPACE(poly_reduce)
-void poly_reduce(poly *r);
+void poly_reduce(poly_16 *r);
 
 #define poly_add KYBER_NAMESPACE(poly_add)
-void poly_add(poly *r, const poly *a, const poly *b);
+void poly_add(poly_16 *r, const poly_16 *a, const poly_16 *b);
 #define poly_sub KYBER_NAMESPACE(poly_sub)
 void poly_sub(poly *r, const poly *a, const poly *b);
 

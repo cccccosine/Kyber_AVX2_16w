@@ -5,7 +5,7 @@
 #include "params.h"
 #include "poly_16.h"
 #include "ntt_16.h"
-#include "consts.h"    //ntt_16_consts
+#include "consts_16.h"
 #include "reduce.h"
 #include "cbd.h"
 #include "symmetric.h"
@@ -94,7 +94,7 @@ void poly_compress(uint8_t r[128], const poly * restrict a)
 {
   unsigned int i;
   __m256i f0, f1, f2, f3;
-  const __m256i v = _mm256_load_si256(&qdata.vec[_16XV/16]);
+  const __m256i v = _mm256_load_si256(&qdata_16.vec[_16XV_16/16]);
   const __m256i shift1 = _mm256_set1_epi16(1 << 9);
   const __m256i mask = _mm256_set1_epi16(15);
   const __m256i shift2 = _mm256_set1_epi16((16 << 8) + 1);
@@ -132,7 +132,7 @@ void poly_decompress(poly * restrict r, const uint8_t a[128])
   unsigned int i;
   __m128i t;
   __m256i f;
-  const __m256i q = _mm256_load_si256(&qdata.vec[_16XQ/16]);
+  const __m256i q = _mm256_load_si256(&qdata_16.vec[_16XQ_16/16]);
   const __m256i shufbidx = _mm256_set_epi8(7,7,7,7,6,6,6,6,5,5,5,5,4,4,4,4,
                                            3,3,3,3,2,2,2,2,1,1,1,1,0,0,0,0);
   const __m256i mask = _mm256_set1_epi32(0x00F0000F);
@@ -219,13 +219,13 @@ void poly_decompress(poly * restrict r, const uint8_t a[160])
 
 void poly_tobytes(uint8_t r[KYBER_POLYBYTES], const poly *a)
 {
-  ntttobytes_avx(r, a->vec, qdata.vec);
+  ntttobytes_avx(r, a->vec, qdata_16.vec);
 }
 
 
 void poly_frombytes(poly *r, const uint8_t a[KYBER_POLYBYTES])
 {
-  nttfrombytes_avx(r->vec, a, qdata.vec);
+  nttfrombytes_avx(r->vec, a, qdata_16.vec);
 }
 
 
@@ -319,17 +319,17 @@ void poly_getnoise_eta2(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t non
 
 #ifndef KYBER_90S
 #define NOISE_NBLOCKS ((KYBER_ETA1*KYBER_N/4+SHAKE256_RATE-1)/SHAKE256_RATE)
-void poly_getnoise_eta1_4x(poly *r0,
-                           poly *r1,
-                           poly *r2,
-                           poly *r3,
+void poly_getnoise_eta1_4x(poly_16 *r0,
+                           poly_16 *r1,
+                           poly_16 *r2,
+                           poly_16 *r3,
                            const uint8_t seed[32],
                            uint8_t nonce0,
                            uint8_t nonce1,
                            uint8_t nonce2,
                            uint8_t nonce3)
 {
-  ALIGNED_UINT8(NOISE_NBLOCKS*SHAKE256_RATE) buf[4];
+  ALIGNED_UINT8(NOISE_NBLOCKS*16*SHAKE256_RATE) buf[4];    //NOISE_NBLOCKS = 1
   __m256i f;
   keccakx4_state state;
 
@@ -345,9 +345,9 @@ void poly_getnoise_eta1_4x(poly *r0,
   buf[3].coeffs[32] = nonce3;
 
   shake256x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 33);
-  shake256x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, NOISE_NBLOCKS, &state);
+  shake256x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, NOISE_NBLOCKS*16, &state);
 
-  poly_cbd_eta1(r0, buf[0].vec);
+  poly_cbd_eta1(r0, buf[0].vec);  //buf.vec数组的个数似乎都对不上，每一层系数中的数组个数都比下一层多几个
   poly_cbd_eta1(r1, buf[1].vec);
   poly_cbd_eta1(r2, buf[2].vec);
   poly_cbd_eta1(r3, buf[3].vec);
@@ -391,15 +391,15 @@ void poly_getnoise_eta1122_4x(poly *r0,
 #endif
 
 
-void poly_ntt(poly *r)
+void poly_ntt(poly_16 *r)
 {
-  ntt_avx_16(r->vec, qdata.vec);
+  ntt_avx_16(r->vec, qdata_16.vec);
 }
 
 
 void poly_invntt_tomont(poly *r)
 {
-  invntt_avx(r->vec, qdata.vec);
+  invntt_avx(r->vec, qdata_16.vec);
 }
 
 void poly_nttunpack(poly_16 *r)
@@ -408,30 +408,30 @@ void poly_nttunpack(poly_16 *r)
 }
 
 
-void poly_basemul_montgomery(poly *r, const poly *a, const poly *b)
+void poly_basemul_montgomery(poly_16 *r, const poly_16 *a, const poly_16 *b)
 {
-  basemul_avx(r->vec, a->vec, b->vec, qdata.vec);
+  basemul_avx_16(r->vec, a->vec, b->vec, qdata_16.vec);
 }
 
 
-void poly_tomont(poly *r)
+void poly_tomont(poly_16 *r)
 {
-  tomont_avx(r->vec, qdata.vec);
+  tomont_avx_16(r->vec, qdata_16.vec);
 }
 
 
-void poly_reduce(poly *r)
+void poly_reduce(poly_16 *r)
 {
-  reduce_avx(r->vec, qdata.vec);
+  reduce_avx_16(r->vec, qdata_16.vec);
 }
 
 
-void poly_add(poly *r, const poly *a, const poly *b)
+void poly_add(poly_16 *r, const poly_16 *a, const poly_16 *b)
 {
   unsigned int i;
   __m256i f0, f1;
 
-  for(i=0;i<KYBER_N/16;i++) {
+  for(i=0;i<KYBER_N;i++) {
     f0 = _mm256_load_si256(&a->vec[i]);
     f1 = _mm256_load_si256(&b->vec[i]);
     f0 = _mm256_add_epi16(f0, f1);

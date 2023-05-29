@@ -2,7 +2,7 @@
 #include <immintrin.h>
 #include <string.h>
 #include "params.h"
-#include "consts.h"   //ntt_16_consts 
+#include "consts_16.h"
 #include "rejsample.h"
 
 //#define BMI
@@ -276,10 +276,10 @@ unsigned int rej_uniform_avx(int16_t * restrict r, const uint8_t *buf)
   unsigned int ctr, pos;
   uint16_t val0, val1;
   uint32_t good;
-#ifdef BMI
+#ifdef BMI     //关于BMI都没改
   uint64_t idx0, idx1, idx2, idx3;
 #endif
-  const __m256i bound  = _mm256_load_si256(&qdata.vec[_16XQ/16]);
+  const __m256i bound  = _mm256_load_si256(&qdata_16.vec[_16XQ_16/16]);
   const __m256i ones   = _mm256_set1_epi8(1);
   const __m256i mask  = _mm256_set1_epi16(0xFFF);
   const __m256i idx8  = _mm256_set_epi8(15,14,14,13,12,11,11,10,
@@ -290,11 +290,17 @@ unsigned int rej_uniform_avx(int16_t * restrict r, const uint8_t *buf)
   __m128i f, t, pilo, pihi;
 
   ctr = pos = 0;
-  while(ctr <= KYBER_N*16 - 32 && pos <= REJ_UNIFORM_AVX_BUFLEN*16 - 48) {
+  while(ctr <= KYBER_N*16 - 32 && pos <= REJ_UNIFORM_AVX_BUFLEN*16 - 48) {   //REJ_UNIFORM_AVX_BUFLEN = 3*168
+    // f0 = [f0-0 f0-1 f0-2 f0-3], f1 = [f1-0 f1-1 f1-2 f1-3]
     f0 = _mm256_loadu_si256((__m256i *)&buf[pos]);
     f1 = _mm256_loadu_si256((__m256i *)&buf[pos+24]);
+    // 0x94 = 10 01 01 00 = 2 1 1 0
+    // f0 = [f0-0 f0-1 f0-1 f0-2], f1 = [f1-0 f1-1 f1-1 f1-2]
     f0 = _mm256_permute4x64_epi64(f0, 0x94);
     f1 = _mm256_permute4x64_epi64(f1, 0x94);
+    /*
+    * f0 = [f0-0 f0-1 ... f0-]
+    */
     f0 = _mm256_shuffle_epi8(f0, idx8);
     f1 = _mm256_shuffle_epi8(f1, idx8);
     g0 = _mm256_srli_epi16(f0, 4);

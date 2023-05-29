@@ -1,4 +1,4 @@
-#include "ntt_16_consts.h"
+#include "consts_16.h"
 
 .macro schoolbook off
 vmovdqa		_16XQINV_16*2(%rcx),%ymm0

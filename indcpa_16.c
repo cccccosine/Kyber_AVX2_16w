@@ -32,7 +32,7 @@ static void unpack_pk(polyvec *pk,
 }
 
 
-static void pack_sk(uint8_t r[KYBER_INDCPA_SECRETKEYBYTES], polyvec *sk)
+static void pack_sk(uint8_t r[KYBER_INDCPA_SECRETKEYBYTES], polyvec_16 *sk)
 {
   polyvec_tobytes(r, sk);
 }
@@ -180,7 +180,7 @@ void gen_matrix(polyvec *a, const uint8_t seed[32], int transposed)
   poly_nttunpack(&a[1].vec[1]);
 }
 #elif KYBER_K == 3
-void gen_matrix(polyvec_16 *a, const uint8_t seed[32*16], int transposed)
+void gen_matrix(polyvec_16 *a, const uint8_t seed[32], int transposed)
 {
   unsigned int ctr0, ctr1, ctr2, ctr3;
   ALIGNED_UINT8(REJ_UNIFORM_AVX_NBLOCKS*16*SHAKE128_RATE) buf[4];   //3*16*168
@@ -363,18 +363,17 @@ void gen_matrix(polyvec *a, const uint8_t seed[32], int transposed)
 #endif
 #endif
 
-//unfinished 16-way indcpa_keypair
-void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES][16],
-                    uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES][16])
+//unfinished 16-way indcpa_keypair 
+void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],     //pk 和 sk的数组个数未确定
+                    uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES])
 {
   unsigned int i;
   uint8_t buf[2*KYBER_SYMBYTES];
   const uint8_t *publicseed = buf;
   const uint8_t *noiseseed = buf + KYBER_SYMBYTES;
-  polyvec e[16], pkpv[16], skpv[16];
-  polyvec_16 a[KYBER_K];
+  polyvec_16 a[KYBER_K], skpv, e, pkpv;
 
-  randombytes(buf, KYBER_SYMBYTES);       //产生16个seed
+  randombytes(buf, KYBER_SYMBYTES);
   hash_g(buf, buf, KYBER_SYMBYTES);
 
   gen_a(a, publicseed);
@@ -401,10 +400,8 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES][16],
 #if KYBER_K == 2    //not changed
   poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, e.vec+0, e.vec+1, noiseseed, 0, 1, 2, 3);
 #elif KYBER_K == 3  
-  for(i = 0; i < 16; i++) {
-    poly_getnoise_eta1_4x(skpv[i].vec+0, skpv[i].vec+1, skpv[i].vec+2, e[i].vec+0, noiseseed, 0, 1, 2, 3);
-    poly_getnoise_eta1_4x(e[i].vec+1, e[i].vec+2, pkpv[i].vec+0, pkpv[i].vec+1, noiseseed, 4, 5, 6, 7);
-  }
+  poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, e.vec+0, noiseseed, 0, 1, 2, 3);
+  poly_getnoise_eta1_4x(e.vec+1, e.vec+2, pkpv.vec+0, pkpv.vec+1, noiseseed, 4, 5, 6, 7);
 #elif KYBER_K == 4
   poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, skpv.vec+3, noiseseed,  0, 1, 2, 3);
   poly_getnoise_eta1_4x(e.vec+0, e.vec+1, e.vec+2, e.vec+3, noiseseed, 4, 5, 6, 7);

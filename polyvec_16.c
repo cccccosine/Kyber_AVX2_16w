@@ -5,7 +5,7 @@
 #include "polyvec_16.h"
 #include "poly_16.h"
 #include "ntt_16.h"
-#include "consts.h"    //ntt_16_consts
+#include "consts_16.h"
 
 #if (KYBER_POLYVECCOMPRESSEDBYTES == (KYBER_K * 320))
 static void poly_compress10(uint8_t r[320], const poly * restrict a)
@@ -13,7 +13,7 @@ static void poly_compress10(uint8_t r[320], const poly * restrict a)
   unsigned int i;
   __m256i f0, f1, f2;
   __m128i t0, t1;
-  const __m256i v = _mm256_load_si256(&qdata.vec[_16XV/16]);
+  const __m256i v = _mm256_load_si256(&qdata_16.vec[_16XV_16/16]);
   const __m256i v8 = _mm256_slli_epi16(v,3);
   const __m256i off = _mm256_set1_epi16(15);
   const __m256i shift1 = _mm256_set1_epi16(1 << 12);
@@ -190,7 +190,7 @@ void polyvec_frombytes(polyvec *r, const uint8_t a[KYBER_POLYVECBYTES])
 }
 
 
-void polyvec_ntt(polyvec *r)
+void polyvec_ntt(polyvec_16 *r)
 {
   unsigned int i;
   for(i=0;i<KYBER_K;i++)
@@ -206,10 +206,10 @@ void polyvec_invntt_tomont(polyvec *r)
 }
 
 
-void polyvec_basemul_acc_montgomery(poly *r, const polyvec *a, const polyvec *b)
+void polyvec_basemul_acc_montgomery(poly_16 *r, const polyvec_16 *a, const polyvec_16 *b)
 {
   unsigned int i;
-  poly tmp;
+  poly_16 tmp;
 
   poly_basemul_montgomery(r,&a->vec[0],&b->vec[0]);
   for(i=1;i<KYBER_K;i++) {
@@ -219,7 +219,7 @@ void polyvec_basemul_acc_montgomery(poly *r, const polyvec *a, const polyvec *b)
 }
 
 
-void polyvec_reduce(polyvec *r)
+void polyvec_reduce(polyvec_16 *r)
 {
   unsigned int i;
   for(i=0;i<KYBER_K;i++)
@@ -227,7 +227,7 @@ void polyvec_reduce(polyvec *r)
 }
 
 
-void polyvec_add(polyvec *r, const polyvec *a, const polyvec *b)
+void polyvec_add(polyvec_16 *r, const polyvec_16 *a, const polyvec_16 *b)
 {
   unsigned int i;
   for(i=0;i<KYBER_K;i++)
