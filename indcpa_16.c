@@ -366,29 +366,17 @@ void gen_matrix(polyvec *a, const uint8_t seed[32], int transposed)
 
 void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES*16],     
                     uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES*16])
-                    // int16_t skpvprint[KYBER_K*KYBER_N*16],
-                    // int16_t pkpvprint[KYBER_K*KYBER_N*16])
 {
   unsigned int i, j, k, p;
-  uint8_t buf[2*KYBER_SYMBYTES] = {0};
+  uint8_t buf[2*KYBER_SYMBYTES];
   const uint8_t *publicseed = buf;
   const uint8_t *noiseseed = buf + KYBER_SYMBYTES;
   polyvec_16 a[KYBER_K], skpv, e, pkpv;
 
-  for (i = 0; i < KYBER_K; i++) {
-    for (j = 0; j < KYBER_K; j++) {
-      for(k = 0; k < 256; k++){
-        for(p = 0; p < 16; p++) {
-          a[i].vec[j].coeffs[k*16+p] = 1;
-        }
-      }
-    }
-  }
+  randombytes(buf, KYBER_SYMBYTES);
+  hash_g(buf, buf, KYBER_SYMBYTES);
 
-  // randombytes(buf, KYBER_SYMBYTES);
-  // hash_g(buf, buf, KYBER_SYMBYTES);
-
-  // gen_a(a, publicseed);
+  gen_a(a, publicseed);
 
 #ifdef KYBER_90S  //not changed
 #define NOISE_NBLOCKS ((KYBER_ETA1*KYBER_N/4)/AES256CTR_BLOCKBYTES) /* Assumes divisibility */
@@ -412,16 +400,8 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES*16],
 #if KYBER_K == 2    //not changed
   poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, e.vec+0, e.vec+1, noiseseed, 0, 1, 2, 3);
 #elif KYBER_K == 3 
-  for (j = 0; j < KYBER_K; j++) {
-    for(k = 0; k < 256; k++) {
-      for(p = 0; p < 16; p++) {
-        skpv.vec[j].coeffs[k*16+p] = 1;
-        e.vec[j].coeffs[k*16+p] = 1;
-      }
-    }
-  }
-  // poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, e.vec+0, noiseseed, 0, 1, 2, 3);
-  // poly_getnoise_eta1_4x(e.vec+1, e.vec+2, pkpv.vec+0, pkpv.vec+1, noiseseed, 4, 5, 6, 7);
+  poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, e.vec+0, noiseseed, 0, 1, 2, 3);
+  poly_getnoise_eta1_4x(e.vec+1, e.vec+2, pkpv.vec+0, pkpv.vec+1, noiseseed, 4, 5, 6, 7);
 #elif KYBER_K == 4    //not changed
   poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, skpv.vec+3, noiseseed,  0, 1, 2, 3);
   poly_getnoise_eta1_4x(e.vec+0, e.vec+1, e.vec+2, e.vec+3, noiseseed, 4, 5, 6, 7);
@@ -444,14 +424,6 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES*16],
   pack_sk(sk, &skpv);
   pack_pk(pk, &pkpv, publicseed);
 
-  // for(i = 0; i < KYBER_K; i++) {
-  //   for(j = 0; j < KYBER_N*16; j++) {
-  //     // skpvprint[i*KYBER_N*16+j] = skpv.vec[i].coeffs[j];
-  //     pkpvprint[i*KYBER_N*16+j] = pkpv.vec[i].coeffs[j];
-  //     // pkpvprint[i*KYBER_N*16+j] = e.vec[i].coeffs[j];
-  //     // pkpvprint[i*KYBER_N*16+j] = a[1].vec[i].coeffs[j];
-  //   }
-  // }
 }
 
 

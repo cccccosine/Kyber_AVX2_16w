@@ -21,16 +21,8 @@ int main() {
         return -1;
     }
 
-    // indcpa_keypair(pk, sk, skpvprint, pkpvprint);
     indcpa_keypair(pk, sk);
-    
-    // for(int i = 0; i < KYBER_K; i++) {
-    //     for(int j = 0; j < KYBER_N; j++) {
-    //         // fprintf(f, "%7d", skpvprint[(i*KYBER_N+j)*16]); 
-    //         fprintf(f, "%7d", pkpvprint[(i*KYBER_N+j)*16]); 
-    //         fputs("\n", f);
-    //     }
-    // }
+
 
     for(int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES-2; i++) {
         for(int j = 0; j < 16; j++) {
@@ -38,36 +30,6 @@ int main() {
         }
         fputs("\n", f);
     }
-
-    // for(int i = 0; i < KYBER_N; i++) {
-    //     for(int j = 0; j < 16; j++) {
-    //         p.coeffs[i*16+j] = 1;
-    //         q.coeffs[i*16+j] = 1;
-    //     }
-    // }
-    // poly_basemul_montgomery(&r, &p, &q);
-    // for(int i = 0; i < KYBER_N; i++) {
-    //     for(int j = 0; j < 16; j++) {
-    //         fprintf(f, "%7d", r.coeffs[i*16+j]); 
-    //     }
-    //     fputs("\n", f);
-    // }
-
-    // for(int i = 0; i < KYBER_K; i++) {
-    //   for(int j = 0; j < KYBER_N*16; j++) {
-    //     a.vec[i].coeffs[j] = 1;
-    //     b.vec[i].coeffs[j] = 1;
-    //   }
-    // }
-    // polyvec_basemul_acc_montgomery(&r, &a, &b);
-    // for(int i = 0; i < KYBER_N; i++) {
-    //     for(int j = 0; j < 16; j++) {
-    //         fprintf(f, "%7d", r.coeffs[i*16+j]); 
-    //     }
-    //     fputs("\n", f);
-    // }
-
-
 
 
     fclose(f);
