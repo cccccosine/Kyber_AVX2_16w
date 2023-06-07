@@ -13,19 +13,19 @@ typedef struct{
 } polyvec_16;
 
 #define polyvec_compress KYBER_NAMESPACE(polyvec_compress)
-void polyvec_compress(uint8_t r[KYBER_POLYVECCOMPRESSEDBYTES+2], const polyvec *a);
+void polyvec_compress(uint8_t r[KYBER_POLYVECCOMPRESSEDBYTES+2], const polyvec_16 *a);
 #define polyvec_decompress KYBER_NAMESPACE(polyvec_decompress)
 void polyvec_decompress(polyvec *r, const uint8_t a[KYBER_POLYVECCOMPRESSEDBYTES+12]);
 
 #define polyvec_tobytes KYBER_NAMESPACE(polyvec_tobytes)
-void polyvec_tobytes(uint8_t r[KYBER_POLYVECBYTES], const polyvec *a);
+void polyvec_tobytes(uint8_t r[KYBER_POLYVECBYTES*16], const polyvec_16 *a);
 #define polyvec_frombytes KYBER_NAMESPACE(polyvec_frombytes)
-void polyvec_frombytes(polyvec *r, const uint8_t a[KYBER_POLYVECBYTES]);
+void polyvec_frombytes(polyvec_16 *r, const uint8_t a[KYBER_POLYVECBYTES*16]);
 
 #define polyvec_ntt KYBER_NAMESPACE(polyvec_ntt)
 void polyvec_ntt(polyvec_16 *r);
 #define polyvec_invntt_tomont KYBER_NAMESPACE(polyvec_invntt_tomont)
-void polyvec_invntt_tomont(polyvec *r);
+void polyvec_invntt_tomont(polyvec_16 *r);
 
 #define polyvec_basemul_acc_montgomery KYBER_NAMESPACE(polyvec_basemul_acc_montgomery)
 void polyvec_basemul_acc_montgomery(poly_16 *r, const polyvec_16 *a, const polyvec_16 *b);

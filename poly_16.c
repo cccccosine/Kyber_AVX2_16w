@@ -217,19 +217,19 @@ void poly_decompress(poly * restrict r, const uint8_t a[160])
 #endif
 
 
-void poly_tobytes(uint8_t r[KYBER_POLYBYTES], const poly *a)
+void poly_tobytes(uint8_t r[KYBER_POLYBYTES*16], const poly_16 *a)
 {
-  ntttobytes_avx(r, a->vec, qdata_16.vec);
+  ntttobytes_avx_16(r, a->vec, qdata_16.vec);
 }
 
 
-void poly_frombytes(poly *r, const uint8_t a[KYBER_POLYBYTES])
+void poly_frombytes(poly_16 *r, const uint8_t a[KYBER_POLYBYTES*16])
 {
-  nttfrombytes_avx(r->vec, a, qdata_16.vec);
+  nttfrombytes_avx_16(r->vec, a, qdata_16.vec);
 }
 
 
-void poly_frommsg(poly * restrict r, const uint8_t msg[KYBER_INDCPA_MSGBYTES])
+void poly_frommsg(poly_16 * restrict r, const uint8_t msg[16][KYBER_INDCPA_MSGBYTES])
 {
 #if (KYBER_INDCPA_MSGBYTES != 32)
 #error "KYBER_INDCPA_MSGBYTES must be equal to 32!"
@@ -239,7 +239,7 @@ void poly_frommsg(poly * restrict r, const uint8_t msg[KYBER_INDCPA_MSGBYTES])
   const __m256i idx = _mm256_broadcastsi128_si256(_mm_set_epi8(15,14,11,10,7,6,3,2,13,12,9,8,5,4,1,0));
   const __m256i hqs = _mm256_set1_epi16((KYBER_Q+1)/2);
 
-#define FROMMSG64(i)						\
+#define FROMMSG64(i, j)						\
   g3 = _mm256_shuffle_epi32(f,0x55*i);				\
   g3 = _mm256_sllv_epi32(g3,shift);				\
   g3 = _mm256_shuffle_epi8(g3,idx);				\
@@ -262,16 +262,92 @@ void poly_frommsg(poly * restrict r, const uint8_t msg[KYBER_INDCPA_MSGBYTES])
   g2 = _mm256_permute2x128_si256(h0,h1,0x31);			\
   g1 = _mm256_permute2x128_si256(h2,h3,0x20);			\
   g3 = _mm256_permute2x128_si256(h2,h3,0x31);			\
-  _mm256_store_si256(&r->vec[0+2*i+0],g0);	\
-  _mm256_store_si256(&r->vec[0+2*i+1],g1);	\
-  _mm256_store_si256(&r->vec[8+2*i+0],g2);	\
-  _mm256_store_si256(&r->vec[8+2*i+1],g3)
+  _mm256_store_si256(&r->vec[j*16+0+2*i+0],g0);	\
+  _mm256_store_si256(&r->vec[j*16+0+2*i+1],g1);	\
+  _mm256_store_si256(&r->vec[j*16+8+2*i+0],g2);	\
+  _mm256_store_si256(&r->vec[j*16+8+2*i+1],g3)
 
   f = _mm256_loadu_si256((__m256i *)msg);
-  FROMMSG64(0);
-  FROMMSG64(1);
-  FROMMSG64(2);
-  FROMMSG64(3);
+  FROMMSG64(0, 0);
+  FROMMSG64(1, 0);
+  FROMMSG64(2, 0);
+  FROMMSG64(3, 0);
+  f = _mm256_loadu_si256((__m256i *)(msg+256));
+  FROMMSG64(0, 1);
+  FROMMSG64(1, 1);
+  FROMMSG64(2, 1);
+  FROMMSG64(3, 1);
+  f = _mm256_loadu_si256((__m256i *)(msg+512));
+  FROMMSG64(0, 2);
+  FROMMSG64(1, 2);
+  FROMMSG64(2, 2);
+  FROMMSG64(3, 2);
+  f = _mm256_loadu_si256((__m256i *)(msg+768));
+  FROMMSG64(0, 3);
+  FROMMSG64(1, 3);
+  FROMMSG64(2, 3);
+  FROMMSG64(3, 3);
+  f = _mm256_loadu_si256((__m256i *)(msg+1024));
+  FROMMSG64(0, 4);
+  FROMMSG64(1, 4);
+  FROMMSG64(2, 4);
+  FROMMSG64(3, 4);
+  f = _mm256_loadu_si256((__m256i *)(msg+1280));
+  FROMMSG64(0, 5);
+  FROMMSG64(1, 5);
+  FROMMSG64(2, 5);
+  FROMMSG64(3, 5);
+  f = _mm256_loadu_si256((__m256i *)(msg+1536));
+  FROMMSG64(0, 6);
+  FROMMSG64(1, 6);
+  FROMMSG64(2, 6);
+  FROMMSG64(3, 6);
+  f = _mm256_loadu_si256((__m256i *)(msg+1792));
+  FROMMSG64(0, 7);
+  FROMMSG64(1, 7);
+  FROMMSG64(2, 7);
+  FROMMSG64(3, 7);
+  f = _mm256_loadu_si256((__m256i *)(msg+2048));
+  FROMMSG64(0, 8);
+  FROMMSG64(1, 8);
+  FROMMSG64(2, 8);
+  FROMMSG64(3, 8);
+  f = _mm256_loadu_si256((__m256i *)(msg+2304));
+  FROMMSG64(0, 9);
+  FROMMSG64(1, 9);
+  FROMMSG64(2, 9);
+  FROMMSG64(3, 9);
+  f = _mm256_loadu_si256((__m256i *)(msg+2560));
+  FROMMSG64(0, 10);
+  FROMMSG64(1, 10);
+  FROMMSG64(2, 10);
+  FROMMSG64(3, 10);
+  f = _mm256_loadu_si256((__m256i *)(msg+2816));
+  FROMMSG64(0, 11);
+  FROMMSG64(1, 11);
+  FROMMSG64(2, 11);
+  FROMMSG64(3, 11);
+  f = _mm256_loadu_si256((__m256i *)(msg+3072));
+  FROMMSG64(0, 12);
+  FROMMSG64(1, 12);
+  FROMMSG64(2, 12);
+  FROMMSG64(3, 12);
+  f = _mm256_loadu_si256((__m256i *)(msg+3328));
+  FROMMSG64(0, 13);
+  FROMMSG64(1, 13);
+  FROMMSG64(2, 13);
+  FROMMSG64(3, 13);
+  f = _mm256_loadu_si256((__m256i *)(msg+3584));
+  FROMMSG64(0, 14);
+  FROMMSG64(1, 14);
+  FROMMSG64(2, 14);
+  FROMMSG64(3, 14);
+  f = _mm256_loadu_si256((__m256i *)(msg+3840));
+  FROMMSG64(0, 15);
+  FROMMSG64(1, 15);
+  FROMMSG64(2, 15);
+  FROMMSG64(3, 15);
+
 }
 
 
@@ -397,9 +473,9 @@ void poly_ntt(poly_16 *r)
 }
 
 
-void poly_invntt_tomont(poly *r)
+void poly_invntt_tomont(poly_16 *r)
 {
-  invntt_avx(r->vec, qdata_16.vec);
+  invntt_avx_16(r->vec, qdata_16.vec);
 }
 
 void poly_nttunpack(poly_16 *r)

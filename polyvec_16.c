@@ -8,7 +8,7 @@
 #include "consts_16.h"
 
 #if (KYBER_POLYVECCOMPRESSEDBYTES == (KYBER_K * 320))
-static void poly_compress10(uint8_t r[320], const poly * restrict a)
+static void poly_compress10(uint8_t r[320], const poly_16 * restrict a)
 {
   unsigned int i;
   __m256i f0, f1, f2;
@@ -146,7 +146,7 @@ static void poly_decompress11(poly * restrict r, const uint8_t a[352+10])
 #endif
 
 
-void polyvec_compress(uint8_t r[KYBER_POLYVECCOMPRESSEDBYTES+2], const polyvec *a)
+void polyvec_compress(uint8_t r[KYBER_POLYVECCOMPRESSEDBYTES+2], const polyvec_16 *a)
 {
   unsigned int i;
 
@@ -174,19 +174,19 @@ void polyvec_decompress(polyvec *r, const uint8_t a[KYBER_POLYVECCOMPRESSEDBYTES
 }
 
 
-void polyvec_tobytes(uint8_t r[KYBER_POLYVECBYTES], const polyvec *a)
+void polyvec_tobytes(uint8_t r[KYBER_POLYVECBYTES*16], const polyvec_16 *a)
 {
   unsigned int i;
   for(i=0;i<KYBER_K;i++)
-    poly_tobytes(r+i*KYBER_POLYBYTES, &a->vec[i]);
+    poly_tobytes(r+i*KYBER_POLYBYTES*16, &a->vec[i]);
 }
 
 
-void polyvec_frombytes(polyvec *r, const uint8_t a[KYBER_POLYVECBYTES])
+void polyvec_frombytes(polyvec_16 *r, const uint8_t a[KYBER_POLYVECBYTES*16])
 {
   unsigned int i;
   for(i=0;i<KYBER_K;i++)
-    poly_frombytes(&r->vec[i], a+i*KYBER_POLYBYTES);
+    poly_frombytes(&r->vec[i], a+i*KYBER_POLYBYTES*16);
 }
 
 
@@ -198,7 +198,7 @@ void polyvec_ntt(polyvec_16 *r)
 }
 
 
-void polyvec_invntt_tomont(polyvec *r)
+void polyvec_invntt_tomont(polyvec_16 *r)
 {
   unsigned int i;
   for(i=0;i<KYBER_K;i++)

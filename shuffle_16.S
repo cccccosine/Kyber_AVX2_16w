@@ -2,6 +2,12 @@
 .include "fq.inc"
 
 
+
+#
+#   @brief: turn %rdi into NTT domain
+#
+#   @details: 16-way uses vmovdqa to replace the origin shuffle1,2,4,8
+#
 .text
 nttunpack256_avx:
 #load 1
@@ -335,23 +341,215 @@ call		nttunpack256_avx
 
 ret
 
+.macro tobyte pos1, pos2
+#load
+vmovdqa		(\pos1)(%rsi),%ymm5
+vmovdqa		(\pos1 +  32)(%rsi),%ymm6
+vmovdqa		(\pos1 +  64)(%rsi),%ymm7
+vmovdqa		(\pos1 +  96)(%rsi),%ymm8
+vmovdqa		(\pos1 + 128)(%rsi),%ymm9
+vmovdqa		(\pos1 + 160)(%rsi),%ymm10
+vmovdqa		(\pos1 + 192)(%rsi),%ymm11
+vmovdqa		(\pos1 + 224)(%rsi),%ymm12
 
-ntttobytes128_avx:
+#csubq
+csubq		5,13
+csubq		6,13
+csubq		7,13
+csubq		8,13
+csubq		9,13
+csubq		10,13
+csubq		11,13
+csubq		12,13
 
+#bitpack
+vpsllw		$12,%ymm6,%ymm4
+vpor		%ymm4,%ymm5,%ymm4
+
+vpsrlw		$4,%ymm6,%ymm5
+vpsllw		$8,%ymm7,%ymm6
+vpor		%ymm5,%ymm6,%ymm5
+
+vpsrlw		$8,%ymm7,%ymm6
+vpsllw		$4,%ymm8,%ymm7
+vpor		%ymm6,%ymm7,%ymm6
+
+vpsllw		$12,%ymm10,%ymm7
+vpor		%ymm7,%ymm9,%ymm7
+
+vpsrlw		$4,%ymm10,%ymm8
+vpsllw		$8,%ymm11,%ymm9
+vpor		%ymm8,%ymm9,%ymm8
+
+vpsrlw		$8,%ymm11,%ymm9
+vpsllw		$4,%ymm12,%ymm10
+vpor		%ymm9,%ymm10,%ymm9
+
+#store
+vmovdqu		%ymm4,(\pos2)(%rdi)
+vmovdqu		%ymm5,(\pos2 +  32)(%rdi)
+vmovdqu		%ymm6,(\pos2 +  64)(%rdi)
+vmovdqu		%ymm7,(\pos2 +  96)(%rdi)
+vmovdqu		%ymm8,(\pos2 + 128)(%rdi)
+vmovdqu		%ymm9,(\pos2 + 160)(%rdi)
+
+.endm
+
+.macro frombyte pos1, pos2
+#load
+vmovdqu		(\pos1)(%rsi),%ymm10
+vmovdqu		(\pos1 +  32)(%rsi),%ymm7
+vmovdqu		(\pos1 +  64)(%rsi),%ymm4
+vmovdqu		(\pos1 +  96)(%rsi),%ymm8
+vmovdqu		(\pos1 + 128)(%rsi),%ymm5
+vmovdqu		(\pos1 + 160)(%rsi),%ymm9
+
+#bitunpack
+vpsrlw		$12,%ymm10,%ymm11
+vpsllw		$4,%ymm7,%ymm12
+vpor		%ymm11,%ymm12,%ymm11
+vpand		%ymm0,%ymm10,%ymm10
+vpand		%ymm0,%ymm11,%ymm11
+
+vpsrlw		$8,%ymm7,%ymm12
+vpsllw		$8,%ymm4,%ymm13
+vpor		%ymm12,%ymm13,%ymm12
+vpand		%ymm0,%ymm12,%ymm12
+
+vpsrlw		$4,%ymm4,%ymm13
+vpand		%ymm0,%ymm13,%ymm13
+
+vpsrlw		$12,%ymm8,%ymm14
+vpsllw		$4,%ymm5,%ymm15
+vpor		%ymm14,%ymm15,%ymm14
+vpand		%ymm0,%ymm8,%ymm8
+vpand		%ymm0,%ymm14,%ymm14
+
+vpsrlw		$8,%ymm5,%ymm15
+vpsllw		$8,%ymm9,%ymm1
+vpor		%ymm15,%ymm1,%ymm15
+vpand		%ymm0,%ymm15,%ymm15
+
+vpsrlw		$4,%ymm9,%ymm1
+vpand		%ymm0,%ymm1,%ymm1
+
+#store
+vmovdqa		%ymm10,(\pos2)(%rdi)
+vmovdqa		%ymm11,(\pos2 +  32)(%rdi)
+vmovdqa		%ymm12,(\pos2 +  64)(%rdi)
+vmovdqa		%ymm13,(\pos2 +  96)(%rdi)
+vmovdqa		%ymm8,(\pos2 + 128)(%rdi)
+vmovdqa		%ymm14,(\pos2 + 160)(%rdi)
+vmovdqa		%ymm15,(\pos2 + 192)(%rdi)
+vmovdqa		%ymm1,(\pos2 + 224)(%rdi)
+
+.endm
+
+
+#
+#   @brief: concatenate signicifant bits so that every coefficients is 12-bit-significant, then don't change out of NTT domain(which is different from original)
+#
+#   @details: 16-way doesn't use shuffle1,2,4,8 as we think shuffle operations here offset shuffle operations in the function nttfrombytes()
+#             It seems that shuffle operations in to/frombytes() functions make no sense
+#
+ntttobytes256_avx:
+
+tobyte 0, 0
+tobyte 256, 192
+tobyte 512, 384
+tobyte 768, 576
+tobyte 1024, 768
+tobyte 1280, 960
+tobyte 1536, 1152
+tobyte 1792, 1344
+tobyte 2048, 1536
+tobyte 2304, 1728
+
+tobyte 2560, 1920
+tobyte 2816, 2112
+tobyte 3072, 2304
+tobyte 3328, 2496
+tobyte 3584, 2688
+tobyte 3840, 2880
+tobyte 4096, 3072
+tobyte 4352, 3264
+tobyte 4608, 3456
+tobyte 4864, 3648
+
+tobyte 5120, 3840
+tobyte 5376, 4032
+tobyte 5632, 4224
+tobyte 5888, 4416
+tobyte 6144, 4608
+tobyte 6400, 4800
+tobyte 6656, 4992
+tobyte 6912, 5184
+tobyte 7168, 5376
+tobyte 7424, 5568
+
+tobyte 7680, 5760
+tobyte 7936, 5952
 
 ret
 
 
-.global cdecl(ntttobytes_avx)
-cdecl(ntttobytes_avx):
+.global cdecl(ntttobytes_avx_16)
+cdecl(ntttobytes_avx_16):
 #consts
 vmovdqa		_16XQ_16*2(%rdx),%ymm0
-call		ntttobytes128_avx
-add		$256,%rsi
-add		$192,%rdi
-call		ntttobytes128_avx
+call		ntttobytes256_avx
+
 ret
 
 
+#
+#   @brief: seperate the concatenation between coefficients, and this function is the inverse of ntttobytes256_avx
+#
+#
+nttfrombytes256_avx:
 
+frombyte 0, 0
+frombyte 192, 256
+frombyte 384, 512
+frombyte 576, 768
+frombyte 768, 1024
+frombyte 960, 1280
+frombyte 1152, 1536
+frombyte 1344, 1792
+frombyte 1536, 2048
+frombyte 1728, 2304
 
+frombyte 1920, 2560
+frombyte 2112, 2816
+frombyte 2304, 3072
+frombyte 2496, 3328
+frombyte 2688, 3584
+frombyte 2880, 3840
+frombyte 3072, 4096
+frombyte 3264, 4352
+frombyte 3456, 4608
+frombyte 3648, 4864
+
+frombyte 3840, 5120
+frombyte 4032, 5376
+frombyte 4224, 5632
+frombyte 4416, 5888
+frombyte 4608, 6144
+frombyte 4800, 6400
+frombyte 4992, 6656
+frombyte 5184, 6912
+frombyte 5376, 7168
+frombyte 5568, 7424
+
+frombyte 5760, 7680
+frombyte 5952, 7936
+
+ret
+
+.global cdecl(nttfrombytes_avx_16)
+cdecl(nttfrombytes_avx_16):
+#consts
+vmovdqa		_16XMASK_16*2(%rdx),%ymm0
+call		nttfrombytes256_avx
+
+ret

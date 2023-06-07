@@ -14,12 +14,12 @@ void poly_compress(uint8_t r[KYBER_POLYCOMPRESSEDBYTES], const poly *a);
 void poly_decompress(poly *r, const uint8_t a[KYBER_POLYCOMPRESSEDBYTES]);
 
 #define poly_tobytes KYBER_NAMESPACE(poly_tobytes)
-void poly_tobytes(uint8_t r[KYBER_POLYBYTES], const poly *a);
+void poly_tobytes(uint8_t r[KYBER_POLYBYTES*16], const poly_16 *a);
 #define poly_frombytes KYBER_NAMESPACE(poly_frombytes)
-void poly_frombytes(poly *r, const uint8_t a[KYBER_POLYBYTES]);
+void poly_frombytes(poly_16 *r, const uint8_t a[KYBER_POLYBYTES*16]);
 
 #define poly_frommsg KYBER_NAMESPACE(poly_frommsg)
-void poly_frommsg(poly *r, const uint8_t msg[KYBER_INDCPA_MSGBYTES]);
+void poly_frommsg(poly_16 *r, const uint8_t msg[16][KYBER_INDCPA_MSGBYTES]);
 #define poly_tomsg KYBER_NAMESPACE(poly_tomsg)
 void poly_tomsg(uint8_t msg[KYBER_INDCPA_MSGBYTES], const poly *r);
 
@@ -59,7 +59,7 @@ void poly_getnoise_eta1122_4x(poly *r0,
 #define poly_ntt KYBER_NAMESPACE(poly_ntt)
 void poly_ntt(poly_16 *r);
 #define poly_invntt_tomont KYBER_NAMESPACE(poly_invntt_tomont)
-void poly_invntt_tomont(poly *r);
+void poly_invntt_tomont(poly_16 *r);
 #define poly_nttunpack KYBER_NAMESPACE(poly_nttunpack)
 void poly_nttunpack(poly_16 *r);
 #define poly_basemul_montgomery KYBER_NAMESPACE(poly_basemul_montgomery)

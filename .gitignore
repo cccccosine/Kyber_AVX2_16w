@@ -1,3 +1,4 @@
 .vscode
 all
 *.txt
+!test_correct.txt
