@@ -92,8 +92,8 @@ sub		$32,%rsp
 lea		(_ZETAS_BASEMUL+   0)*2(%rcx),%r9
 schoolbook	0
 
-#lea		(_ZETAS_BASEMUL+  32)*2(%rcx),%r9
-add		$32*2,%r9
+lea		(_ZETAS_BASEMUL+  32)*2(%rcx),%r9
+#add		$32*2,%r9
 schoolbook	1
 
 lea		(_ZETAS_BASEMUL+  64)*2(%rcx),%r9

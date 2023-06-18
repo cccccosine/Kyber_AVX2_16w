@@ -1,4 +1,6 @@
 .vscode
 all
 *.txt
-!test_correct.txt
+!test_indcpakeypair.txt
+!test_indcpaenc.txt
+!test_indcpadec.txt

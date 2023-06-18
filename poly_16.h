@@ -9,7 +9,7 @@ typedef ALIGNED_INT16(KYBER_N) poly;
 typedef ALIGNED_INT16(KYBER_N*16) poly_16;
 
 #define poly_compress KYBER_NAMESPACE(poly_compress)
-void poly_compress(uint8_t r[KYBER_POLYCOMPRESSEDBYTES], const poly *a);
+void poly_compress(uint8_t r[KYBER_POLYCOMPRESSEDBYTES], const poly_16 *a);
 #define poly_decompress KYBER_NAMESPACE(poly_decompress)
 void poly_decompress(poly *r, const uint8_t a[KYBER_POLYCOMPRESSEDBYTES]);
 
@@ -18,8 +18,8 @@ void poly_tobytes(uint8_t r[KYBER_POLYBYTES*16], const poly_16 *a);
 #define poly_frombytes KYBER_NAMESPACE(poly_frombytes)
 void poly_frombytes(poly_16 *r, const uint8_t a[KYBER_POLYBYTES*16]);
 
-#define poly_frommsg KYBER_NAMESPACE(poly_frommsg)
-void poly_frommsg(poly_16 *r, const uint8_t msg[16][KYBER_INDCPA_MSGBYTES]);
+#define poly_frommsg_16 KYBER_NAMESPACE(poly_frommsg_16)
+void poly_frommsg_16(poly_16 *r, const uint8_t msg[KYBER_INDCPA_MSGBYTES*16]);
 #define poly_tomsg KYBER_NAMESPACE(poly_tomsg)
 void poly_tomsg(uint8_t msg[KYBER_INDCPA_MSGBYTES], const poly *r);
 
