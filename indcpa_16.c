@@ -51,7 +51,7 @@ static void pack_ciphertext(uint8_t r[KYBER_INDCPA_BYTES], polyvec_16 *b, poly_1
 }
 
 
-static void unpack_ciphertext(polyvec *b, poly *v, const uint8_t c[KYBER_INDCPA_BYTES])
+static void unpack_ciphertext(polyvec_16 *b, poly_16 *v, const uint8_t c[KYBER_INDCPA_BYTES])
 {
   polyvec_decompress(b, c);
   poly_decompress(v, c+KYBER_POLYVECCOMPRESSEDBYTES);
@@ -558,14 +558,26 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
 }
 
 
-void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
+void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*16],
                 const uint8_t c[KYBER_INDCPA_BYTES],
-                const uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES])
+                const uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES*16]
+                // int16_t bprint[KYBER_K*KYBER_N*16],
+                // int16_t vprint[KYBER_N*16]
+                )
 {
-  polyvec b, skpv;
-  poly v, mp;
+  polyvec_16 b, skpv;
+  poly_16 v, mp;
 
   unpack_ciphertext(&b, &v, c);
+  // for(int i = 0; i < KYBER_K; i++) {
+  //   for(int j = 0; j < KYBER_N*16; j++) {
+  //    bprint[i*KYBER_N*16+j] = b.vec[i].coeffs[j];
+  //   }
+  // }
+  // for(int j = 0; j < KYBER_N*16; j++) {
+  //    vprint[j] = v.coeffs[j];
+  // }
+
   unpack_sk(&skpv, sk);
 
   polyvec_ntt(&b);
@@ -575,5 +587,9 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
   poly_sub(&mp, &v, &mp);
   poly_reduce(&mp);
 
-  poly_tomsg(m, &mp);
+  // for(int j = 0; j < KYBER_N*16; j++) {
+  //    vprint[j] = mp.coeffs[j];
+  // }
+
+  poly_tomsg_16(m, &mp);
 }

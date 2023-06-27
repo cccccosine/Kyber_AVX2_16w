@@ -282,9 +282,6 @@ schoolbook	62
 lea		(_ZETAS_BASEMUL+2016)*2(%rcx),%r9
 schoolbook	63
 
-
-
-
 mov		%r8,%rsp
 ret
 

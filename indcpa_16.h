@@ -23,8 +23,11 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
                 // int16_t vprint[KYBER_N*16]);
 
 #define indcpa_dec KYBER_NAMESPACE(indcpa_dec)
-void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
+void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*16],
                 const uint8_t c[KYBER_INDCPA_BYTES],
-                const uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]);
+                const uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES*16]
+                // int16_t bprint[KYBER_K*KYBER_N*16],
+                // int16_t vprint[KYBER_N*16]
+                );
 
 #endif

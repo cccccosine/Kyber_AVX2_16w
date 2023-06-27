@@ -97,8 +97,6 @@ void poly_compress(uint8_t r[128*16], const poly_16 * restrict a)
   const __m256i v = _mm256_load_si256(&qdata_16.vec[_16XV_16/16]);
   const __m256i shift1 = _mm256_set1_epi16(1 << 9);
   const __m256i mask = _mm256_set1_epi16(15);
-  const __m256i shift2 = _mm256_set1_epi16((16 << 8) + 1);
-  const __m256i permdidx = _mm256_set_epi32(7,3,6,2,5,1,4,0);
 
   for(i=0;i<KYBER_N*16/64;i++) {
     f0 = _mm256_load_si256(&a->vec[4*i+0]);
@@ -128,25 +126,34 @@ void poly_compress(uint8_t r[128*16], const poly_16 * restrict a)
   }
 }
 
-void poly_decompress(poly * restrict r, const uint8_t a[128])
+void poly_decompress(poly_16 * restrict r, const uint8_t a[128*16])
 {
   unsigned int i;
   __m128i t;
-  __m256i f;
+  __m256i f, g;
   const __m256i q = _mm256_load_si256(&qdata_16.vec[_16XQ_16/16]);
-  const __m256i shufbidx = _mm256_set_epi8(7,7,7,7,6,6,6,6,5,5,5,5,4,4,4,4,
-                                           3,3,3,3,2,2,2,2,1,1,1,1,0,0,0,0);
-  const __m256i mask = _mm256_set1_epi32(0x00F0000F);
+  const __m256i mask = _mm256_set1_epi16(30720);
   const __m256i shift = _mm256_set1_epi32((128 << 16) + 2048);
 
-  for(i=0;i<KYBER_N/16;i++) {
-    t = _mm_loadl_epi64((__m128i *)&a[8*i]);
-    f = _mm256_broadcastsi128_si256(t);
-    f = _mm256_shuffle_epi8(f,shufbidx);
-    f = _mm256_and_si256(f,mask);
-    f = _mm256_mullo_epi16(f,shift);
-    f = _mm256_mulhrs_epi16(f,q);
-    _mm256_store_si256(&r->vec[i],f);
+  for(i=0;i<KYBER_N*16/16/4;i++) {
+    f = _mm256_loadu_si256((__m256i *)&a[32*i]);
+    g = _mm256_slli_epi16(f, 11);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g,q);
+    _mm256_store_si256(&r->vec[4*i],g);
+    g = _mm256_slli_epi16(f, 7);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g,q);
+    _mm256_store_si256(&r->vec[4*i+1],g);
+    g = _mm256_slli_epi16(f, 3);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g,q);
+    _mm256_store_si256(&r->vec[4*i+2],g);
+    g = _mm256_srli_epi16(f, 1);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g,q);
+    _mm256_store_si256(&r->vec[4*i+3],g);
+
   }
 }
 
@@ -237,8 +244,11 @@ void poly_frommsg_16(poly_16 * restrict r, const uint8_t msg[KYBER_INDCPA_MSGBYT
 #endif
   __m256i f, g0, g1, g2, g3, h0, h1, h2, h3;
   // const __m256i shift = _mm256_broadcastsi128_si256(_mm_set_epi32(0,1,2,3));
-  const __m256i idx1 = _mm256_set_epi8(15,15,13,13,11,11,9,9,7,7,5,5,3,3,1,1,14,14,12,12,10,10,8,8,6,6,4,4,2,2,0,0);
-  const __m256i idx2 = _mm256_set_epi8(31,31,29,29,27,27,25,25,23,23,21,21,19,19,17,17,30,30,28,28,26,26,24,24,22,22,20,20,18,18,16,16);
+  // const __m256i idx1 = _mm256_set_epi8(15,15,13,13,11,11,9,9,7,7,5,5,3,3,1,1,14,14,12,12,10,10,8,8,6,6,4,4,2,2,0,0);
+  // const __m256i idx2 = _mm256_set_epi8(31,31,29,29,27,27,25,25,23,23,21,21,19,19,17,17,30,30,28,28,26,26,24,24,22,22,20,20,18,18,16,16);
+  const __m256i idx1 = _mm256_set_epi8(15,15,14,14,13,13,12,12,11,11,10,10,9,9,8,8,7,7,6,6,5,5,4,4,3,3,2,2,1,1,0,0);
+  const __m256i idx2 = _mm256_set_epi8(31,31,30,30,29,29,28,28,27,27,26,26,25,25,24,24,23,23,22,22,21,21,20,20,19,19,18,18,17,17,16,16);
+
   const __m256i hqs = _mm256_set1_epi16((KYBER_Q+1)/2);
 
 #define FROMMSG64(i)						          \
@@ -346,29 +356,145 @@ void poly_frommsg_16(poly_16 * restrict r, const uint8_t msg[KYBER_INDCPA_MSGBYT
 }
 
 
-void poly_tomsg(uint8_t msg[KYBER_INDCPA_MSGBYTES], const poly * restrict a)
+void poly_tomsg_16(uint8_t msg[KYBER_INDCPA_MSGBYTES*16], const poly_16 * restrict a)
 {
   unsigned int i;
-  uint32_t small;
-  __m256i f0, f1, g0, g1;
+  __m256i f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, \
+          g0, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15;
   const __m256i hq = _mm256_set1_epi16((KYBER_Q - 1)/2);
   const __m256i hhq = _mm256_set1_epi16((KYBER_Q - 1)/4);
+  const __m256i mask = _mm256_set1_epi16(32896);  //0b1000 0000 1000 0000
 
-  for(i=0;i<KYBER_N/32;i++) {
-    f0 = _mm256_load_si256(&a->vec[2*i+0]);
-    f1 = _mm256_load_si256(&a->vec[2*i+1]);
+  for(i=0;i<KYBER_N*16/256;i++) {
+    f0 = _mm256_load_si256(&a->vec[16*i+0]);
+    f1 = _mm256_load_si256(&a->vec[16*i+1]);
+    f2 = _mm256_load_si256(&a->vec[16*i+2]);
+    f3 = _mm256_load_si256(&a->vec[16*i+3]);
+    f4 = _mm256_load_si256(&a->vec[16*i+4]);
+    f5 = _mm256_load_si256(&a->vec[16*i+5]);
+    f6 = _mm256_load_si256(&a->vec[16*i+6]);
+    f7 = _mm256_load_si256(&a->vec[16*i+7]);
+    f8 = _mm256_load_si256(&a->vec[16*i+8]);
+    f9 = _mm256_load_si256(&a->vec[16*i+9]);
+    f10 = _mm256_load_si256(&a->vec[16*i+10]);
+    f11 = _mm256_load_si256(&a->vec[16*i+11]);
+    f12 = _mm256_load_si256(&a->vec[16*i+12]);
+    f13 = _mm256_load_si256(&a->vec[16*i+13]);
+    f14 = _mm256_load_si256(&a->vec[16*i+14]);
+    f15 = _mm256_load_si256(&a->vec[16*i+15]);
+
     f0 = _mm256_sub_epi16(hq, f0);
     f1 = _mm256_sub_epi16(hq, f1);
+    f2 = _mm256_sub_epi16(hq, f2);
+    f3 = _mm256_sub_epi16(hq, f3);
+    f4 = _mm256_sub_epi16(hq, f4);
+    f5 = _mm256_sub_epi16(hq, f5);
+    f6 = _mm256_sub_epi16(hq, f6);
+    f7 = _mm256_sub_epi16(hq, f7);
+    f8 = _mm256_sub_epi16(hq, f8);
+    f9 = _mm256_sub_epi16(hq, f9);
+    f10 = _mm256_sub_epi16(hq, f10);
+    f11 = _mm256_sub_epi16(hq, f11);
+    f12 = _mm256_sub_epi16(hq, f12);
+    f13 = _mm256_sub_epi16(hq, f13);
+    f14 = _mm256_sub_epi16(hq, f14);
+    f15 = _mm256_sub_epi16(hq, f15);
+
     g0 = _mm256_srai_epi16(f0, 15);
     g1 = _mm256_srai_epi16(f1, 15);
+    g2 = _mm256_srai_epi16(f2, 15);
+    g3 = _mm256_srai_epi16(f3, 15);
+    g4 = _mm256_srai_epi16(f4, 15);
+    g5 = _mm256_srai_epi16(f5, 15);
+    g6 = _mm256_srai_epi16(f6, 15);
+    g7 = _mm256_srai_epi16(f7, 15);
+    g8 = _mm256_srai_epi16(f8, 15);
+    g9 = _mm256_srai_epi16(f9, 15);
+    g10 = _mm256_srai_epi16(f10, 15);
+    g11 = _mm256_srai_epi16(f11, 15);
+    g12 = _mm256_srai_epi16(f12, 15);
+    g13 = _mm256_srai_epi16(f13, 15);
+    g14 = _mm256_srai_epi16(f14, 15);
+    g15 = _mm256_srai_epi16(f15, 15);
+
     f0 = _mm256_xor_si256(f0, g0);
     f1 = _mm256_xor_si256(f1, g1);
+    f2 = _mm256_xor_si256(f2, g2);
+    f3 = _mm256_xor_si256(f3, g3);
+    f4 = _mm256_xor_si256(f4, g4);
+    f5 = _mm256_xor_si256(f5, g5);
+    f6 = _mm256_xor_si256(f6, g6);
+    f7 = _mm256_xor_si256(f7, g7);
+    f8 = _mm256_xor_si256(f8, g8);
+    f9 = _mm256_xor_si256(f9, g9);
+    f10 = _mm256_xor_si256(f10, g10);
+    f11 = _mm256_xor_si256(f11, g11);
+    f12 = _mm256_xor_si256(f12, g12);
+    f13 = _mm256_xor_si256(f13, g13);
+    f14 = _mm256_xor_si256(f14, g14);
+    f15 = _mm256_xor_si256(f15, g15);
+
     f0 = _mm256_sub_epi16(f0, hhq);
     f1 = _mm256_sub_epi16(f1, hhq);
-    f0 = _mm256_packs_epi16(f0, f1);
-    f0 = _mm256_permute4x64_epi64(f0, 0xD8);
-    small = _mm256_movemask_epi8(f0);
-    memcpy(&msg[4*i], &small, 4);
+    f2 = _mm256_sub_epi16(f2, hhq);
+    f3 = _mm256_sub_epi16(f3, hhq);
+    f4 = _mm256_sub_epi16(f4, hhq);
+    f5 = _mm256_sub_epi16(f5, hhq);
+    f6 = _mm256_sub_epi16(f6, hhq);
+    f7 = _mm256_sub_epi16(f7, hhq);
+    f8 = _mm256_sub_epi16(f8, hhq);
+    f9 = _mm256_sub_epi16(f9, hhq);
+    f10 = _mm256_sub_epi16(f10, hhq);
+    f11 = _mm256_sub_epi16(f11, hhq);
+    f12 = _mm256_sub_epi16(f12, hhq);
+    f13 = _mm256_sub_epi16(f13, hhq);
+    f14 = _mm256_sub_epi16(f14, hhq);
+    f15 = _mm256_sub_epi16(f15, hhq);
+
+    g0 = _mm256_packs_epi16(f0, f8);
+    g1 = _mm256_packs_epi16(f1, f9);
+    g2 = _mm256_packs_epi16(f2, f10);
+    g3 = _mm256_packs_epi16(f3, f11);
+    g4 = _mm256_packs_epi16(f4, f12);
+    g5 = _mm256_packs_epi16(f5, f13);
+    g6 = _mm256_packs_epi16(f6, f14);
+    g7 = _mm256_packs_epi16(f7, f15);
+
+    g0 = _mm256_permute4x64_epi64(g0, 0xD8);
+    g1 = _mm256_permute4x64_epi64(g1, 0xD8);
+    g2 = _mm256_permute4x64_epi64(g2, 0xD8);
+    g3 = _mm256_permute4x64_epi64(g3, 0xD8);
+    g4 = _mm256_permute4x64_epi64(g4, 0xD8);
+    g5 = _mm256_permute4x64_epi64(g5, 0xD8);
+    g6 = _mm256_permute4x64_epi64(g6, 0xD8);
+    g7 = _mm256_permute4x64_epi64(g7, 0xD8);
+
+    g0 = _mm256_and_si256(g0, mask);
+    g1 = _mm256_and_si256(g1, mask);
+    g2 = _mm256_and_si256(g2, mask);
+    g3 = _mm256_and_si256(g3, mask);
+    g4 = _mm256_and_si256(g4, mask);
+    g5 = _mm256_and_si256(g5, mask);
+    g6 = _mm256_and_si256(g6, mask);
+    g7 = _mm256_and_si256(g7, mask);
+
+    g0 = _mm256_srli_epi16(g0, 7);
+    g1 = _mm256_srli_epi16(g1, 6);
+    g2 = _mm256_srli_epi16(g2, 5);
+    g3 = _mm256_srli_epi16(g3, 4);
+    g4 = _mm256_srli_epi16(g4, 3);
+    g5 = _mm256_srli_epi16(g5, 2);
+    g6 = _mm256_srli_epi16(g6, 1);
+
+    g0 = _mm256_add_epi16(g0, g1);
+    g0 = _mm256_add_epi16(g0, g2);
+    g0 = _mm256_add_epi16(g0, g3);
+    g0 = _mm256_add_epi16(g0, g4);
+    g0 = _mm256_add_epi16(g0, g5);
+    g0 = _mm256_add_epi16(g0, g6);
+    g0 = _mm256_add_epi16(g0, g7);
+
+    memcpy(&msg[32*i], &g0, 32);
   }
 }
 
@@ -511,12 +637,12 @@ void poly_add(poly_16 *r, const poly_16 *a, const poly_16 *b)
 }
 
 
-void poly_sub(poly *r, const poly *a, const poly *b)
+void poly_sub(poly_16 *r, const poly_16 *a, const poly_16 *b)
 {
   unsigned int i;
   __m256i f0, f1;
 
-  for(i=0;i<KYBER_N/16;i++) {
+  for(i=0;i<KYBER_N*16/16;i++) {
     f0 = _mm256_load_si256(&a->vec[i]);
     f1 = _mm256_load_si256(&b->vec[i]);
     f0 = _mm256_sub_epi16(f0, f1);

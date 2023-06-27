@@ -11,7 +11,7 @@ typedef ALIGNED_INT16(KYBER_N*16) poly_16;
 #define poly_compress KYBER_NAMESPACE(poly_compress)
 void poly_compress(uint8_t r[KYBER_POLYCOMPRESSEDBYTES], const poly_16 *a);
 #define poly_decompress KYBER_NAMESPACE(poly_decompress)
-void poly_decompress(poly *r, const uint8_t a[KYBER_POLYCOMPRESSEDBYTES]);
+void poly_decompress(poly_16 *r, const uint8_t a[KYBER_POLYCOMPRESSEDBYTES]);
 
 #define poly_tobytes KYBER_NAMESPACE(poly_tobytes)
 void poly_tobytes(uint8_t r[KYBER_POLYBYTES*16], const poly_16 *a);
@@ -20,8 +20,8 @@ void poly_frombytes(poly_16 *r, const uint8_t a[KYBER_POLYBYTES*16]);
 
 #define poly_frommsg_16 KYBER_NAMESPACE(poly_frommsg_16)
 void poly_frommsg_16(poly_16 *r, const uint8_t msg[KYBER_INDCPA_MSGBYTES*16]);
-#define poly_tomsg KYBER_NAMESPACE(poly_tomsg)
-void poly_tomsg(uint8_t msg[KYBER_INDCPA_MSGBYTES], const poly *r);
+#define poly_tomsg_16 KYBER_NAMESPACE(poly_tomsg_16)
+void poly_tomsg_16(uint8_t msg[KYBER_INDCPA_MSGBYTES*16], const poly_16 *r);
 
 #define poly_getnoise_eta1 KYBER_NAMESPACE(poly_getnoise_eta1)
 void poly_getnoise_eta1(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce);
@@ -73,6 +73,6 @@ void poly_reduce(poly_16 *r);
 #define poly_add KYBER_NAMESPACE(poly_add)
 void poly_add(poly_16 *r, const poly_16 *a, const poly_16 *b);
 #define poly_sub KYBER_NAMESPACE(poly_sub)
-void poly_sub(poly *r, const poly *a, const poly *b);
+void poly_sub(poly_16 *r, const poly_16 *a, const poly_16 *b);
 
 #endif

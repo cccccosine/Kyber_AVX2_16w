@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 #include "indcpa_16.h"
 #include "poly_16.h"
 #include "polyvec_16.h"
@@ -65,7 +66,7 @@ int main() {
     //     pk[i] = 12;
     // }
     for(i = 0; i < KYBER_INDCPA_MSGBYTES*16; i++) {
-        m[i] = 1;
+        m[i] = 2;
     }
 
     FILE *f1 = fopen("test_indcpaenc.txt", "w+");
@@ -81,12 +82,12 @@ int main() {
     // indcpa_enc(c, m, pk, coins, pkpvprint, vprint);
     indcpa_enc(c, m, pk, coins);
     
-    // for(i = (KYBER_POLYVECCOMPRESSEDBYTES/16); i < (KYBER_INDCPA_BYTES/16); i++) {
-    //     for(int j = 0; j < 16; j++) {
-    //         fprintf(f1, "%7d", c[i*16+j]); 
-    //     }
-    //     fputs("\n", f1);
-    // }
+    for(i = 0; i < (KYBER_INDCPA_BYTES/16); i++) {
+        for(int j = 0; j < 16; j++) {
+            fprintf(f1, "%7d", c[i*16+j]); 
+        }
+        fputs("\n", f1);
+    }
     // for(int i = 0; i < KYBER_K; i++) {
     //     for(int j = 0; j < KYBER_N; j++) {
     //         // fprintf(f1, "%7d", skpvprint[(i*KYBER_N+j)*16]); 
@@ -107,8 +108,9 @@ int main() {
 
 #ifdef indcpa_dec_flag
 
-    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
-    //               20000, 16);
+    // int16_t * bprint = (int16_t *)malloc(sizeof(KYBER_K*KYBER_N*16));
+    // int16_t bprint[KYBER_K*KYBER_N*16];
+    // int16_t vprint[KYBER_N*16];
 
     FILE *f2= fopen("test_indcpadec.txt", "w+");
     if (f2== NULL) {
@@ -117,19 +119,49 @@ int main() {
         return -1;
     }
 
-    indcpa_keypair(pk, sk);
+    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_dec, indcpa_dec(m, c, sk),
+                  20000, 16);
 
-    for(int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES-2; i++) {
+
+    // indcpa_dec(m, c, sk);
+    // indcpa_dec(m, c, sk, vprint);
+
+    // for(int i = 0; i < KYBER_POLYVECCOMPRESSEDBYTES/16; i++) {
+    //     for(int j = 0; j < 16; j++) {
+    //         fprintf(f2, "%7d", b[i*16+j]); 
+    //     }
+    //     fputs("\n", f2);
+    // }
+
+    // for(int i = 0; i < KYBER_K; i++) {
+    //     for(int j = 0; j < KYBER_N; j++) {
+    //         // fprintf(f2, "%7d", skpvprint[(i*KYBER_N+j)*16]); 
+    //         // fprintf(f2, "%7d", pkpvprint[(i*KYBER_N+j)*16]); 
+    //         fprintf(f2, "%7d", bprint[i*KYBER_N+j]); 
+    //         fputs("\n", f2);
+    //     }
+    // }
+
+    // for(int i = 0; i < KYBER_K; i++) {
+        // for(int j = 0; j < KYBER_N; j++) {
+        //     for(int k = 0; k < 16; k++) {
+        //         // fprintf(f2, "%7d", bprint[(i*KYBER_N+j)*16+k]); 
+        //         fprintf(f2, "%7d", vprint[j*16+k]); 
+        //     }
+        //     fputs("\n", f2); 
+        // }
+    // }
+    // free(bprint);
+
+    for(int i = 0; i < KYBER_INDCPA_MSGBYTES; i++) {
         for(int j = 0; j < 16; j++) {
-            fprintf(f2, "%7d", pk[i*16+j]); 
+            fprintf(f2, "%7d", m[i*16+j]);
         }
-        fputs("\n", f2);
+      fputs("\n", f2);
     }
 
     fclose(f2);
 #endif
-
-
 
     return 0;
 }
