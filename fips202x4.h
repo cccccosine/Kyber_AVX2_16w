@@ -67,4 +67,20 @@ void shake256x4(uint8_t *out0,
                 const uint8_t *in3,
                 size_t inlen);
 
+void sha3x4_256(uint8_t h[32*4*2],
+                const uint8_t *in0,
+                const uint8_t *in1,
+                const uint8_t *in2,
+                const uint8_t *in3,
+                size_t inlen
+               );
+
+void sha3x4_512(uint8_t h[64*4],
+                const uint8_t *in0,
+                const uint8_t *in1,
+                const uint8_t *in2,
+                const uint8_t *in3,
+                size_t inlen
+               );
+
 #endif

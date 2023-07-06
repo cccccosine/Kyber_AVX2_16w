@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "verify.h"
+#include "verify_16.h"
 
 
 int verify(const uint8_t *a, const uint8_t *b, size_t len)

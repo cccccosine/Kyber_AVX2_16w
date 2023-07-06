@@ -18,7 +18,7 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
   const __m256i shift1 = _mm256_set1_epi16(1 << 12);
   const __m256i mask = _mm256_set1_epi16(1023);
 
-  for(i=0;i<KYBER_N*16/16/8;i++) {
+  for(i=0;i<KYBER_N/8;i++) {
     f0 = _mm256_load_si256(&a->vec[i*8]);
     f4 = _mm256_mullo_epi16(f0,v8);
     f5 = _mm256_add_epi16(f0,off);
@@ -151,11 +151,11 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     g0 = _mm256_slli_epi16(f9, 6);
     f8 = _mm256_add_epi16(f8, g0);   //f8 = b8[4:9] | b9[0:9]
 
-    _mm256_store_si256((__m256i *)&r[i*160],f0);
-    _mm256_store_si256((__m256i *)&r[i*160 + 32],f1);
-    _mm256_store_si256((__m256i *)&r[i*160 + 64],f3);
-    _mm256_store_si256((__m256i *)&r[i*160 + 96],f6);
-    _mm256_store_si256((__m256i *)&r[i*160 + 128],f8);
+    _mm256_storeu_si256((__m256i *)&r[i*160],f0);
+    _mm256_storeu_si256((__m256i *)&r[i*160 + 32],f1);
+    _mm256_storeu_si256((__m256i *)&r[i*160 + 64],f3);
+    _mm256_storeu_si256((__m256i *)&r[i*160 + 96],f6);
+    _mm256_storeu_si256((__m256i *)&r[i*160 + 128],f8);
 
   }
 }
@@ -167,7 +167,7 @@ static void poly_decompress10(poly_16 * restrict r, const uint8_t a[320*16])
   const __m256i q = _mm256_set1_epi16(KYBER_Q<<3);
   const __m256i mask = _mm256_set1_epi16(4092);
 
-  for(i=0;i<KYBER_N*16/16/8;i++) {
+  for(i=0;i<KYBER_N/8;i++) {
     f0 = _mm256_loadu_si256((__m256i *)&a[160*i]);
     f1 = _mm256_loadu_si256((__m256i *)&a[160*i + 32]);
     f2 = _mm256_loadu_si256((__m256i *)&a[160*i + 64]);

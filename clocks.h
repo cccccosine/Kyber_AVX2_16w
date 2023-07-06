@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+uint64_t time_now();
+uint64_t cycles_now(void);
+
 #ifdef __INTEL_COMPILER
 #    define BARRIER __memory_barrier()
 #else
@@ -109,16 +112,6 @@
                PARALLEL* iterations*(double)1e6 / (end - start), \
                (unsigned long)((end_c - start_c) / iterations)); \
     } while (0)
-
-// #define cycle_once(LABEL, FUNCTION)                               \
-//     do {                                                          \
-//         printf("%-25s : ", #LABEL);                               \
-//         uint64_t start, end;                                      \
-//         start = cycles_now();                                     \
-//         FUNCTION;                                                 \
-//         end = cycles_now();                                       \
-//         printf("%6lu cycles/op\n", (unsigned long)(end - start)); \
-//     } while (0)
 
 #define cycle_once(LABEL, FUNCTION)                                                   \
     do {                                                                              \
@@ -234,9 +227,6 @@
         printf("average=%lf, diff=%lf\n", average, diff);                          \
         free(cycles);                                                              \
     } while (0)
-
-uint64_t time_now();
-uint64_t cycles_now(void);
 
 /* _CLOCKS_H_ */
 #endif
