@@ -11,27 +11,8 @@
 #include "randombytes.h"
 #include "rejsample.h"
 
-// #define test_kem_dec_flag 
-// #define test_kem_enc_flag 1
 
-void pk_formseq(uint8_t *pk, uint8_t *pkseq) {
-  for(int k = 0; k < 16; k++) {
-    for(int i = 0; i < 3; i++) {
-      for(int j = 0; j < 192; j++) {
-        pkseq[k*3*384+i*384+j*2] = pk[i*32*192+32*j+k*2];
-        pkseq[k*3*384+i*384+j*2+1] = pk[i*32*192+32*j+1+k*2];
-        // skseq[k*3*384+i*384+j*2] = sk[i*32*192+32*j+k*2];
-        // skseq[k*3*384+i*384+j*2+1] = sk[i*32*192+32*j+1+k*2]; 
-      }
-    }
-  }   
-  // for(int i = 0; i < 3*384*16; i++) {
-  //   pk[i] = pkseq[i];
-  //   // sk[i] = skseq[i];
-  // }
-
-}
-
+/* Will contain key, coins */
 void ct_formseq(uint8_t *ct, uint8_t *ctseq) {
   for(int k = 0; k < 16; k++) {
     for(int i = 0; i < 3; i++) {
@@ -50,7 +31,6 @@ void ct_formseq(uint8_t *ct, uint8_t *ctseq) {
 }
 
 
-
 int crypto_kem_keypair(uint8_t *pk,
                        uint8_t *sk)
 {
@@ -67,13 +47,12 @@ int crypto_kem_enc(uint8_t *ct,
                    uint8_t *ss,
                    uint8_t *pk)
 {
-  uint8_t buf[4*168];  //4*168字节足够包括16*32字节
-  // uint8_t mpk[16*2*KYBER_SYMBYTES];   //用来装16次的m||hash_h(pk)
+  /* To adapt to the shake128x4, the size of buf is defined as 4*168 bytes, which is enough to include 16*32 bytes */
+  uint8_t buf[4*168];
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES];
-  // uint8_t *pkseq = (uint8_t *)malloc(KYBER_INDCPA_PUBLICKEYBYTES);
+  /* Will store the ct with rearranged sequence */
   uint8_t *ctseq = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
-  // keccak_state state;
   keccakx4_state state;
 
   // TODO: 后续完善解释
@@ -189,28 +168,6 @@ int crypto_kem_dec(uint8_t *ss,
   uint8_t *ctseq = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
 
   indcpa_dec(buf, ct, sk);
-
-#ifdef test_kem_dec_flag
-  FILE *f0 = fopen("test_kem_dec_ct.txt", "w+");
-
-  for (int i = 0; i < KYBER_CIPHERTEXTBYTES; i++)
-  {
-      fprintf(f0, "%7d", ct[i]);
-      fputs("\n", f0);
-  }
-
-  FILE *f1 = fopen("test_kem_dec_buf.txt", "w+");
-
-  for (int i = 0; i < 16*KYBER_SYMBYTES+KYBER_SYMBYTES; i++)
-  {
-      fprintf(f1, "%7d", buf[i]);
-      fputs("\n", f1);
-  }
-
-  fclose(f0);
-  fclose(f1);
-
-#endif
 
   /* Multitarget countermeasure for coins + contributory KEM */
   memcpy(buf+KYBER_SYMBYTES*16, sk+KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES, KYBER_SYMBYTES);

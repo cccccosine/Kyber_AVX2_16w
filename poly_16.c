@@ -603,10 +603,10 @@ void poly_invntt_tomont(poly_16 *r)
   invntt_avx_16(r->vec, qdata_16.vec);
 }
 
-void poly_nttunpack(poly_16 *r)
-{
-  nttunpack_avx_16(r->vec);
-}
+// void poly_nttunpack(poly_16 *r)
+// {
+//   nttunpack_avx_16(r->vec);
+// }
 
 void poly_basemul_montgomery(poly_16 *r, const poly_16 *a, const poly_16 *b)
 {

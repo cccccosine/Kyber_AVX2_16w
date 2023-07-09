@@ -5,6 +5,7 @@
 
 #
 #   @brief: turn %rdi into NTT domain
+#   find this subroutine is useless in 16-way implementation
 #
 #   @details: 16-way uses vmovdqa to replace the origin shuffle1,2,4,8
 #

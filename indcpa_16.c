@@ -234,10 +234,10 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32], int transposed)
     ctr3 += rej_uniform(a[1].vec[0].coeffs + ctr3, KYBER_N*16 - ctr3, buf[3].coeffs, SHAKE128_RATE);
   }
 
-  poly_nttunpack(&a[0].vec[0]);
-  poly_nttunpack(&a[0].vec[1]);
-  poly_nttunpack(&a[0].vec[2]);
-  poly_nttunpack(&a[1].vec[0]);
+  // poly_nttunpack(&a[0].vec[0]);
+  // poly_nttunpack(&a[0].vec[1]);
+  // poly_nttunpack(&a[0].vec[2]);
+  // poly_nttunpack(&a[1].vec[0]);
 
   f = _mm256_loadu_si256((__m256i *)seed);
   _mm256_store_si256(buf[0].vec, f);
@@ -283,10 +283,10 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32], int transposed)
     ctr3 += rej_uniform(a[2].vec[1].coeffs + ctr3, KYBER_N*16 - ctr3, buf[3].coeffs, SHAKE128_RATE);
   }
 
-  poly_nttunpack(&a[1].vec[1]);
-  poly_nttunpack(&a[1].vec[2]);
-  poly_nttunpack(&a[2].vec[0]);
-  poly_nttunpack(&a[2].vec[1]);
+  // poly_nttunpack(&a[1].vec[1]);
+  // poly_nttunpack(&a[1].vec[2]);
+  // poly_nttunpack(&a[2].vec[0]);
+  // poly_nttunpack(&a[2].vec[1]);
 
   f = _mm256_loadu_si256((__m256i *)seed);
   _mm256_store_si256(buf[0].vec, f);
@@ -300,7 +300,7 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32], int transposed)
     ctr0 += rej_uniform(a[2].vec[2].coeffs + ctr0, KYBER_N*16 - ctr0, buf[0].coeffs, SHAKE128_RATE);
   }
 
-  poly_nttunpack(&a[2].vec[2]);
+  // poly_nttunpack(&a[2].vec[2]);
 }
 #elif KYBER_K == 4
 void gen_matrix(polyvec *a, const uint8_t seed[32], int transposed)
@@ -369,8 +369,8 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
                     uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES])
 {
   unsigned int i, j, k, p;
-  // uint8_t buf[2*KYBER_SYMBYTES];
-  uint8_t buf[2*KYBER_SYMBYTES] = {17};
+  uint8_t buf[2*KYBER_SYMBYTES];
+  // uint8_t buf[2*KYBER_SYMBYTES] = {17};
   const uint8_t *publicseed = buf;
   const uint8_t *noiseseed = buf + KYBER_SYMBYTES;
   polyvec_16 a[KYBER_K], skpv, e, pkpv;

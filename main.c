@@ -47,11 +47,11 @@ static void unpack_ciphertext(polyvec_16 *b, poly_16 *v, const uint8_t c[KYBER_I
 
 #define NTESTS 100000
 // #define all_function_test 1
-// #define indcpa_keypair_flag 1
-// #define indcpa_enc_flag 1
+#define indcpa_keypair_flag 1
+#define indcpa_enc_flag 1
 #define indcpa_dec_flag 1
-// #define kem_keypair_flag 1
-// #define kem_enc_flag 1
+#define kem_keypair_flag 1
+#define kem_enc_flag 1
 #define kem_dec_flag 1
 
 uint64_t t[NTESTS];
@@ -158,8 +158,8 @@ int main()
     // }
     // print_results("indcpa_keypair: ", t, NTESTS);
 
-    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
-    //               20000, 16);
+    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
+                  20000, 16);
 
     FILE *f = fopen("test_indcpakeypair.txt", "w+");
     if (f == NULL)
@@ -169,7 +169,7 @@ int main()
         return -1;
     }
 
-    indcpa_keypair(pk, sk);
+    // indcpa_keypair(pk, sk);
 
     for (int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES/16-2; i++)
     {
@@ -206,19 +206,19 @@ int main()
         return -1;
     }
 
-    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_enc, indcpa_enc(c, m, pk, coins),
-    //               20000, 16);
+    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_enc, indcpa_enc(c, m, pk, coins),
+                  20000, 16);
 
     // indcpa_enc(c, m, pk, coins, pkpvprint, vprint);
-    indcpa_enc(c, m, pk, coins);
+    // indcpa_enc(c, m, pk, coins);
 
-    ct_formseq(c, ctseq);
+    // ct_formseq(c, ctseq);
 
-    for (i = 0; i < (KYBER_INDCPA_BYTES/16); i++)
-    {
-        fprintf(f1, "%7d %7d", ctseq[i], ctseq[i+KYBER_INDCPA_BYTES/16]);
-        fputs("\n", f1);
-    }
+    // for (i = 0; i < (KYBER_INDCPA_BYTES/16); i++)
+    // {
+    //     fprintf(f1, "%7d %7d", ctseq[i], ctseq[i+KYBER_INDCPA_BYTES/16]);
+    //     fputs("\n", f1);
+    // }
 
     // for (i = 0; i < (KYBER_INDCPA_BYTES/16); i++)
     // {
@@ -306,16 +306,16 @@ int main()
 #endif
 
 #ifdef kem_keypair_flag
-    // oper_second_n(while (0), crypto_kem_keypair_16w, crypto_kem_keypair(pk, sk),
-    //               20000, 16);
-    crypto_kem_keypair(pk, sk);
+    oper_second_n(while (0), crypto_kem_keypair_16w, crypto_kem_keypair(pk, sk),
+                  20000, 16);
+    // crypto_kem_keypair(pk, sk);
 
 #endif
 
 #ifdef kem_enc_flag
-    // oper_second_n(while (0), crypto_kem_enc_16w, crypto_kem_enc(ct, ss, pk),
-    //               20000, 16);
-    crypto_kem_enc(ct, ss, pk);
+    oper_second_n(while (0), crypto_kem_enc_16w, crypto_kem_enc(ct, ss, pk),
+                  20000, 16);
+    // crypto_kem_enc(ct, ss, pk);
 
     // FILE *f4 = fopen("test_kem_enc_ss.txt", "w+");
     // if (f4 == NULL)
