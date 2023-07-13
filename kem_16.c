@@ -12,7 +12,6 @@
 #include "rejsample.h"
 
 
-/* Will contain key, coins */
 void ct_formseq(uint8_t *ct, uint8_t *ctseq) {
   for(int k = 0; k < 16; k++) {
     for(int i = 0; i < 3; i++) {
@@ -55,14 +54,8 @@ int crypto_kem_enc(uint8_t *ct,
   uint8_t *ctseq = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
   keccakx4_state state;
 
-  // TODO: 后续完善解释
-  // 代码改变原理：原Kyber的randombyte+hash_h是为了产生随机数，现将原
-  // Kyber中的hash_h转化为等效的absorb_once+squeezeblocks,因为hash_h
-  // 函数内部也就是一个absorb_once+KeccakF1600,squeezeblocks()就是将
-  // KeccakF1600进行封装，运算blocks次的KeccakF1600
+  // TODO: lack a complete explain here
   randombytes(buf, KYBER_SYMBYTES);
-  // shake128_absorb_once(&state, buf, KYBER_SYMBYTES);
-  // shake128_squeezeblocks(buf, 4, &state);
   buf[0] += 0;
   buf[1] += 1;
   buf[2] += 2;
@@ -72,22 +65,13 @@ int crypto_kem_enc(uint8_t *ct,
 
   /* Don't release system RNG output */
   for(int i = 0; i < 4; i++) {
-    // hash_h(buf+KYBER_SYMBYTES*i, buf+KYBER_SYMBYTES*i, KYBER_SYMBYTES);
-    // hash_h(mpk+i*2*KYBER_SYMBYTES, buf+KYBER_SYMBYTES*i, KYBER_SYMBYTES);
     hash_hx4(buf+4*i*KYBER_SYMBYTES, buf+KYBER_SYMBYTES*i*4, buf+KYBER_SYMBYTES*(i*4+1), buf+KYBER_SYMBYTES*(i*4+2), buf+KYBER_SYMBYTES*(i*4+3), KYBER_SYMBYTES);
   }
 
   hash_h(buf+16*KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
 
-  /* Multitarget countermeasure for coins + contributory KEM */
-  // for(int i = 0; i < 16; i++) {
-  //   // hash_h(mpk+i*2*KYBER_SYMBYTES+KYBER_SYMBYTES, pkseq+i*KYBER_INDCPA_PUBLICKEYBYTES/16, KYBER_PUBLICKEYBYTES/16);
-  //   hash_g(kr+i*2*KYBER_SYMBYTES, mpk+i*2*KYBER_SYMBYTES, 2*KYBER_SYMBYTES);
-  // }
-
   hash_g(kr, buf, 17*KYBER_SYMBYTES);
 
-  /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(ct, buf, pk, kr+KYBER_SYMBYTES);
 
 #ifdef test_kem_enc_flag 
@@ -132,11 +116,9 @@ int crypto_kem_enc(uint8_t *ct,
 
 #endif
 
-  /* overwrite coins in kr with H(c) */
   ct_formseq(ct, ctseq);
 
   for(int i = 0; i < 4; i++) {
-    // hash_h(ctseq+i*2*KYBER_SYMBYTES, ctseq+i*KYBER_CIPHERTEXTBYTES/16, KYBER_CIPHERTEXTBYTES/16);
     hash_hx4(ctseq+8*i*KYBER_SYMBYTES + KYBER_SYMBYTES, ctseq+KYBER_CIPHERTEXTBYTES/16*i*4, ctseq+KYBER_CIPHERTEXTBYTES/16*(i*4+1), ctseq+KYBER_CIPHERTEXTBYTES/16*(i*4+2), ctseq+KYBER_CIPHERTEXTBYTES/16*(i*4+3), KYBER_CIPHERTEXTBYTES/16);
   }
 
@@ -169,20 +151,16 @@ int crypto_kem_dec(uint8_t *ss,
 
   indcpa_dec(buf, ct, sk);
 
-  /* Multitarget countermeasure for coins + contributory KEM */
   memcpy(buf+KYBER_SYMBYTES*16, sk+KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES, KYBER_SYMBYTES);
   hash_g(kr, buf, 17*KYBER_SYMBYTES);
 
-  /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(cmp.coeffs, buf, pk, kr+KYBER_SYMBYTES);
 
   fail = verify(ct, cmp.coeffs, KYBER_CIPHERTEXTBYTES);
-  // printf("fail: %d\n", fail);
 
   /* overwrite coins in kr with H(c) */
   ct_formseq(ct, ctseq);
   for(int i = 0; i < 4; i++) {
-    // hash_h(ctseq+i*2*KYBER_SYMBYTES, ctseq+i*KYBER_CIPHERTEXTBYTES/16, KYBER_CIPHERTEXTBYTES/16);
     hash_hx4(ctseq+8*i*KYBER_SYMBYTES + KYBER_SYMBYTES, ctseq+KYBER_CIPHERTEXTBYTES/16*i*4, ctseq+KYBER_CIPHERTEXTBYTES/16*(i*4+1), ctseq+KYBER_CIPHERTEXTBYTES/16*(i*4+2), ctseq+KYBER_CIPHERTEXTBYTES/16*(i*4+3), KYBER_CIPHERTEXTBYTES/16);
   }
 
@@ -191,19 +169,17 @@ int crypto_kem_dec(uint8_t *ss,
       ctseq[KYBER_SYMBYTES*i*2+j] = kr[j];
     }
   }
-  // hash_h(kr+KYBER_SYMBYTES, ct, KYBER_CIPHERTEXTBYTES);
+
 
   /* Overwrite pre-k with z on re-encryption failure */
   for(int i = 0; i < 16; i++) {
     cmov(ctseq+i*KYBER_SYMBYTES*2, sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES, KYBER_SYMBYTES, fail);
   }
-  // cmov(kr, sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES, KYBER_SYMBYTES, fail);
 
   /* hash concatenation of pre-k and H(c) to k */
   for(int i = 0; i < 4; i++) {
     kdfx4(ss + 4*i*KYBER_SSBYTES, ss + (4*i+1)*KYBER_SSBYTES, ss + (4*i+2)*KYBER_SSBYTES, ss + (4*i+3)*KYBER_SSBYTES, ctseq+4*i*2*KYBER_SYMBYTES, ctseq+(4*i+1)*2*KYBER_SYMBYTES, ctseq+(4*i+2)*2*KYBER_SYMBYTES, ctseq+(4*i+3)*2*KYBER_SYMBYTES, 2*KYBER_SYMBYTES);
   }
 
-  // kdf(ss, kr, 2*KYBER_SYMBYTES);
   return 0;
 }

@@ -31,8 +31,6 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     f0 = _mm256_mulhrs_epi16(f0,shift1);
     f0 = _mm256_and_si256(f0,mask);
 
-    // memcpy(&r[256*i],&f0,32);
-
     f1 = _mm256_load_si256(&a->vec[i*8+1]);
     f4 = _mm256_mullo_epi16(f1,v8);
     f5 = _mm256_add_epi16(f1,off);
@@ -44,8 +42,6 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     f1 = _mm256_sub_epi16(f1,f4);
     f1 = _mm256_mulhrs_epi16(f1,shift1);
     f1 = _mm256_and_si256(f1,mask);
-
-    // memcpy(&r[256*i+32],&f1,32);
 
     f2 = _mm256_load_si256(&a->vec[i*8+2]);
     f4 = _mm256_mullo_epi16(f2,v8);
@@ -59,8 +55,6 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     f2 = _mm256_mulhrs_epi16(f2,shift1);
     f2 = _mm256_and_si256(f2,mask);
 
-    // memcpy(&r[256*i+64],&f2,32);
-
     f3 = _mm256_load_si256(&a->vec[i*8+3]);
     f4 = _mm256_mullo_epi16(f3,v8);
     f5 = _mm256_add_epi16(f3,off);
@@ -72,8 +66,6 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     f3 = _mm256_sub_epi16(f3,f4);
     f3 = _mm256_mulhrs_epi16(f3,shift1);
     f3 = _mm256_and_si256(f3,mask);
-
-    // memcpy(&r[256*i+96],&f3,32);
 
     f6 = _mm256_load_si256(&a->vec[i*8+4]);
     f4 = _mm256_mullo_epi16(f6,v8);
@@ -87,8 +79,6 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     f6 = _mm256_mulhrs_epi16(f6,shift1);
     f6 = _mm256_and_si256(f6,mask);
 
-    // memcpy(&r[256*i+128],&f6,32);
-
     f7 = _mm256_load_si256(&a->vec[i*8+5]);
     f4 = _mm256_mullo_epi16(f7,v8);
     f5 = _mm256_add_epi16(f7,off);
@@ -100,8 +90,6 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     f7 = _mm256_sub_epi16(f7,f4);
     f7 = _mm256_mulhrs_epi16(f7,shift1);
     f7 = _mm256_and_si256(f7,mask);
-
-    // memcpy(&r[256*i+160],&f7,32);
 
     f8 = _mm256_load_si256(&a->vec[i*8+6]);
     f4 = _mm256_mullo_epi16(f8,v8);
@@ -115,8 +103,6 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     f8 = _mm256_mulhrs_epi16(f8,shift1);
     f8 = _mm256_and_si256(f8,mask);
 
-    // memcpy(&r[256*i+192],&f8,32);
-
     f9 = _mm256_load_si256(&a->vec[i*8+7]);
     f4 = _mm256_mullo_epi16(f9,v8);
     f5 = _mm256_add_epi16(f9,off);
@@ -128,8 +114,6 @@ static void poly_compress10(uint8_t r[320*16], const poly_16 * restrict a)
     f9 = _mm256_sub_epi16(f9,f4);
     f9 = _mm256_mulhrs_epi16(f9,shift1);
     f9 = _mm256_and_si256(f9,mask);
-
-    // memcpy(&r[256*i+224],&f9,32);
     
     g0 = _mm256_slli_epi16(f1, 10);
     f0 = _mm256_add_epi16(f0, g0);   //f0 = b0 | b1[0:5]
