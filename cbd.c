@@ -13,49 +13,119 @@
 * Arguments:   - poly *r: pointer to output polynomial
 *              - const __m256i *buf: pointer to aligned input byte array
 **************************************************/
-static void cbd2(poly_16 * restrict r, const __m256i buf[2*KYBER_N*16/128])
+static void cbd2(poly_16 * restrict r, const __m256i buf[2*KYBER_N/128])
 {
-  unsigned int i, j;
+  unsigned int i;
   __m256i f0, f1, f2, f3;
   const __m256i mask55 = _mm256_set1_epi32(0x55555555);
   const __m256i mask33 = _mm256_set1_epi32(0x33333333);
   const __m256i mask03 = _mm256_set1_epi32(0x03030303);
   const __m256i mask0F = _mm256_set1_epi32(0x0F0F0F0F);
 
-  for(j = 0; j < 16; j++) {
-    for(i = 0; i < KYBER_N/64; i++) {
-      f0 = _mm256_load_si256(&buf[i+j*4]);
-      f1 = _mm256_srli_epi16(f0, 1);
-      f0 = _mm256_and_si256(mask55, f0);
-      f1 = _mm256_and_si256(mask55, f1);
-      f0 = _mm256_add_epi8(f0, f1);
-      f1 = _mm256_srli_epi16(f0, 2);
-      f0 = _mm256_and_si256(mask33, f0);
-      f1 = _mm256_and_si256(mask33, f1);
-      f0 = _mm256_add_epi8(f0, mask33);
-      f0 = _mm256_sub_epi8(f0, f1);
+  for(i = 0; i < KYBER_N/64; i++) {
+    f0 = _mm256_load_si256(&buf[i]);
 
-      f1 = _mm256_srli_epi16(f0, 4);
-      f0 = _mm256_and_si256(mask0F, f0);
-      f1 = _mm256_and_si256(mask0F, f1);
-      f0 = _mm256_sub_epi8(f0, mask03);
-      f1 = _mm256_sub_epi8(f1, mask03);
-      f2 = _mm256_unpacklo_epi8(f0, f1);
-      f3 = _mm256_unpackhi_epi8(f0, f1);
+    f1 = _mm256_srli_epi16(f0, 1);
+    f0 = _mm256_and_si256(mask55, f0);
+    f1 = _mm256_and_si256(mask55, f1);
+    f0 = _mm256_add_epi8(f0, f1);
 
-      f0 = _mm256_cvtepi8_epi16(_mm256_castsi256_si128(f2));
-      f1 = _mm256_cvtepi8_epi16(_mm256_extracti128_si256(f2,1));
-      f2 = _mm256_cvtepi8_epi16(_mm256_castsi256_si128(f3));
-      f3 = _mm256_cvtepi8_epi16(_mm256_extracti128_si256(f3,1));
+    f1 = _mm256_srli_epi16(f0, 2);
+    f0 = _mm256_and_si256(mask33, f0);
+    f1 = _mm256_and_si256(mask33, f1);
+    f0 = _mm256_add_epi8(f0, mask33);
+    f0 = _mm256_sub_epi8(f0, f1);
 
-      _mm256_store_si256(&r->vec[16*j+4*i+0], f0);
-      _mm256_store_si256(&r->vec[16*j+4*i+1], f2);
-      _mm256_store_si256(&r->vec[16*j+4*i+2], f1);
-      _mm256_store_si256(&r->vec[16*j+4*i+3], f3);
-    }
+    f1 = _mm256_srli_epi16(f0, 4);
+    f0 = _mm256_and_si256(mask0F, f0);
+    f1 = _mm256_and_si256(mask0F, f1);
+    f0 = _mm256_sub_epi8(f0, mask03);
+    f1 = _mm256_sub_epi8(f1, mask03);
+
+    f2 = _mm256_unpacklo_epi8(f0, f1);
+    f3 = _mm256_unpackhi_epi8(f0, f1);
+
+    f0 = _mm256_cvtepi8_epi16(_mm256_castsi256_si128(f2));
+    f1 = _mm256_cvtepi8_epi16(_mm256_extracti128_si256(f2,1));
+    f2 = _mm256_cvtepi8_epi16(_mm256_castsi256_si128(f3));
+    f3 = _mm256_cvtepi8_epi16(_mm256_extracti128_si256(f3,1));
+
+    _mm256_store_si256(&r->vec[4*i+0], f0);
+    _mm256_store_si256(&r->vec[4*i+1], f2);
+    _mm256_store_si256(&r->vec[4*i+2], f1);
+    _mm256_store_si256(&r->vec[4*i+3], f3);
   }
-  
 }
+
+//16个客户端分离前的代码
+// static void cbd2(poly_16 * restrict r, const __m256i buf[2*KYBER_N*16/128])
+// {
+//   unsigned int i, j;
+//   __m256i f0, f1, f2, f3;
+//   const __m256i mask55 = _mm256_set1_epi32(0x55555555);    //mask55 = 0x55555555*8个   
+//   const __m256i mask33 = _mm256_set1_epi32(0x33333333);
+//   const __m256i mask03 = _mm256_set1_epi32(0x03030303);
+//   const __m256i mask0F = _mm256_set1_epi32(0x0F0F0F0F);
+
+//   for(j = 0; j < 16; j++) {
+//     for(i = 0; i < KYBER_N/64; i++) {    //f0, buf[] 同类型，所以不需要load32_littleendian
+//       // f0
+//       f0 = _mm256_load_si256(&buf[i+j*4]);
+//       // f1 = [f0-0>>1 f0-1>>1 ... f0-15>>1], f1-16-0=[f0-1 f0-2 ... f0-15 0]
+//       f1 = _mm256_srli_epi16(f0, 1);
+//       // 5=0101, f0=[f0-0&0101...0101 ...], f0-2=[f0-0 0 f0-2 0 ...]
+//       f0 = _mm256_and_si256(mask55, f0);
+//       // f1=[f1-0&0101...0101 ...], f1-2=[f0-1 0 f0-3 0 ...]
+//       f1 = _mm256_and_si256(mask55, f1);
+//       // f0=[f0-0&01010101 + f1-0&01010101], f0-2=[f0-0+f0-1 0 f0-2+f0-3 0]
+//       f0 = _mm256_add_epi8(f0, f1);
+//       // f1-16-0=[f0-3 f0-4 ... f0-15 0 0 0]
+//       f1 = _mm256_srli_epi16(f0, 2);
+//       // 3=0011, f0-2=[f0-0+f0-1 0 0 0]
+//       f0 = _mm256_and_si256(mask33, f0);
+//       // f1-2=[f0-3 f0-4 0 0 f0-7 f0-8 0 0 f0-11 f0-12 0 0 f0-15 0 0 0]
+//       f1 = _mm256_and_si256(mask33, f1);
+//       // f0-2=[f0-0+f0-1+1 0+1 0 0]
+//       f0 = _mm256_add_epi8(f0, mask33);
+//       /**
+//        * f0=[f0-0+f0-1+1 0+1 0 0 f0-2+f0-3+1 0+1 0 0]-
+//        * [f0-3 f0-4 0 0 f0-7 f0-8 0 0 f0-11 f0-12 0 0 f0-15 0 0 0]
+//        * 
+//        * f0-4-0=f0-0+f0-1+3-f0-3-f0-4*2
+//        * f0-4-1=f0-2+f0-3+3-f0-7-f0-8*2
+//        * f0-4-2=f0-4+f0-5+3-f0-11-f0-12*2
+//       */
+//       f0 = _mm256_sub_epi8(f0, f1);
+
+//       // f1-4-0=f0-2+f0-3+3-f0-7-f0-8*2
+//       f1 = _mm256_srli_epi16(f0, 4);
+//       // 0f=00001111, f0-4-0=0, f0-4-1=f0-2+f0-3+3-f0-7-f0-8*2
+//       f0 = _mm256_and_si256(mask0F, f0);
+//       // f1-4-0=0, f1-4-1=f0-4+f0-5+3-f0-11-f0-12*2
+//       f1 = _mm256_and_si256(mask0F, f1);
+//       // f0-4-0=0, f0-4-1=(f0-2+f0-3+3)-(f0-7+f0-8*2)-3
+//       f0 = _mm256_sub_epi8(f0, mask03);
+//       // f1-4-0=0, f1-4-1=f0-4+f0-5+3-f0-11-f0-12*2-3
+//       f1 = _mm256_sub_epi8(f1, mask03);
+//       // f2-8-0=0000 (f0-2+f0-3+3)-(f0-7+f0-8*2)-3, 0000 f0-4+f0-5+3-f0-11-f0-12*2-3 ...
+//       f2 = _mm256_unpacklo_epi8(f0, f1);
+//       // f3-8-16=0000 (f0-6+f0-7+3)-(f0-15+f0-16*2)-3, 0000 f0-8+f0-9+3-f0-19-f0-20*2-3
+//       f3 = _mm256_unpackhi_epi8(f0, f1);
+//       // f2-8-0=0000 (f0-2+f0-3+3)-(f0-7+f0-8*2)-3, 0000 f0-4+f0-5+3-f0-11-f0-12*2-3 ...
+//       // f2-128~255=0
+//       // f0=
+//       f0 = _mm256_cvtepi8_epi16(_mm256_castsi256_si128(f2));
+//       f1 = _mm256_cvtepi8_epi16(_mm256_extracti128_si256(f2,1));
+//       f2 = _mm256_cvtepi8_epi16(_mm256_castsi256_si128(f3));
+//       f3 = _mm256_cvtepi8_epi16(_mm256_extracti128_si256(f3,1));
+
+//       _mm256_store_si256(&r->vec[16*j+4*i+0], f0);
+//       _mm256_store_si256(&r->vec[16*j+4*i+1], f2);
+//       _mm256_store_si256(&r->vec[16*j+4*i+2], f1);
+//       _mm256_store_si256(&r->vec[16*j+4*i+3], f3);
+//     }
+//   }
+// }
 
 #if KYBER_ETA1 == 3
 /*************************************************
@@ -123,7 +193,7 @@ static void cbd3(poly * restrict r, const uint8_t buf[3*KYBER_N/4+8])
 #endif
 
 /* buf 32 bytes longer for cbd3 */
-void poly_cbd_eta1(poly_16 *r, const __m256i buf[KYBER_ETA1*KYBER_N*16/128+1])
+void poly_cbd_eta1(poly_16 *r, const __m256i buf[KYBER_ETA1*KYBER_N/128+1])
 {
 #if KYBER_ETA1 == 2
   cbd2(r, buf);

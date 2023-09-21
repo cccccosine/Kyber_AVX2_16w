@@ -8,6 +8,13 @@
 #define NROUNDS 24
 #define ROL(a, offset) ((a << offset) ^ (a >> (64-offset)))
 
+static void store64(uint8_t x[8], uint64_t u) {
+  unsigned int i;
+
+  for(i=0;i<8;i++)
+    x[i] = u >> 8*i;
+}
+
 /* Use implementation from the Keccak Code Package */
 #define KeccakF1600_StatePermute4x FIPS202X4_NAMESPACE(KeccakP1600times4_PermuteAll_24rounds)
 extern void KeccakF1600_StatePermute4x(__m256i *s);
@@ -494,7 +501,10 @@ void shake256x4(uint8_t *out0,
   }
 }
 
-void sha3x4_256(uint8_t h[32*8],
+void sha3x4_256(uint8_t *out0,
+                uint8_t *out1,
+                uint8_t *out2,
+                uint8_t *out3,
                 const uint8_t *in0,
                 const uint8_t *in1,
                 const uint8_t *in2,
@@ -505,14 +515,27 @@ void sha3x4_256(uint8_t h[32*8],
   unsigned int i;
   __m256i s[25];
 
-  keccakx4_absorb_once(s, SHA3_256_RATE, in0, in1, in2, in3, inlen, 0x06);
-  KeccakF1600_StatePermute(s);
-  for(i=0;i<4;i++)
-    _mm256_storeu_si256((__m256i *)&h[i*64], s[i]);
+  keccakx4_absorb_once(s, SHA3_256_RATE, in0, in1, in2, in3, inlen, 0x06);// p ?= 0x06
+  KeccakF1600_StatePermute4x(s);
+  for(i = 0; i < 4; i++) {
+    store64(out0+i*8, _mm256_extract_epi64(s[i], 0));
+    store64(out1+i*8, _mm256_extract_epi64(s[i], 1));
+    store64(out2+i*8, _mm256_extract_epi64(s[i], 2));
+    store64(out3+i*8, _mm256_extract_epi64(s[i], 3));
+
+  }
+
+  // _mm256_storeu_si256((__m256i *)&out0[0], s[0]);
+  // _mm256_storeu_si256((__m256i *)&out1[0], s[1]);
+  // _mm256_storeu_si256((__m256i *)&out2[0], s[2]);
+  // _mm256_storeu_si256((__m256i *)&out3[0], s[3]);
 
 }
 
-void sha3x4_512(uint8_t h[64*4],
+void sha3x4_512(uint8_t *out0,
+                uint8_t *out1,
+                uint8_t *out2,
+                uint8_t *out3,
                 const uint8_t *in0,
                 const uint8_t *in1,
                 const uint8_t *in2,
@@ -523,9 +546,30 @@ void sha3x4_512(uint8_t h[64*4],
   unsigned int i;
   __m256i s[25];
 
+<<<<<<< HEAD
   keccakx4_absorb_once(s, SHA3_512_RATE, in0, in1, in2, in3, inlen, 0x06);
   KeccakF1600_StatePermute(s);
   for(i=0;i<8;i++)
     _mm256_storeu_si256((__m256i *)&h[i*32], s[i]);
+=======
+  keccakx4_absorb_once(s, SHA3_512_RATE, in0, in1, in2, in3, inlen, 0x06);// p ?= 0x06
+  KeccakF1600_StatePermute4x(s);
+  for(i = 0; i < 8; i++) {
+    store64(out0+i*8, _mm256_extract_epi64(s[i], 0));
+    store64(out1+i*8, _mm256_extract_epi64(s[i], 1));
+    store64(out2+i*8, _mm256_extract_epi64(s[i], 2));
+    store64(out3+i*8, _mm256_extract_epi64(s[i], 3));
+
+  }
+
+  // _mm256_storeu_si256((__m256i *)&out0[0], s[0]);
+  // _mm256_storeu_si256((__m256i *)&out0[32], s[1]);
+  // _mm256_storeu_si256((__m256i *)&out1[0], s[2]);
+  // _mm256_storeu_si256((__m256i *)&out1[32], s[3]);
+  // _mm256_storeu_si256((__m256i *)&out2[0], s[4]);
+  // _mm256_storeu_si256((__m256i *)&out2[32], s[5]);
+  // _mm256_storeu_si256((__m256i *)&out3[0], s[6]);
+  // _mm256_storeu_si256((__m256i *)&out3[32], s[7]);
+>>>>>>> f0d36eff07b061de2338c1d6215e63b7968787be
 
 }

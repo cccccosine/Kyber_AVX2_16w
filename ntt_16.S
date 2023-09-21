@@ -117,7 +117,7 @@ vpaddw		%ymm15,%ymm\rh3,%ymm\rh3
 .macro levels0t2 off
 /* not just from %rdi as it is 16-way */
 /* level0 */
-vmovdqa		(\off+128)*16*2(%rdi),%ymm8
+vmovdqa		(\off+128)*16*2(%rdi),%ymm8  #每行有*2是因为地址加偏移量单位是字节，一个Kyber系数是16b，2字节
 vmovdqa		(\off+160)*16*2(%rdi),%ymm9
 vmovdqa		(\off+192)*16*2(%rdi),%ymm10
 vmovdqa		(\off+224)*16*2(%rdi),%ymm11

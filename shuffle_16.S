@@ -449,7 +449,7 @@ vmovdqa		%ymm1,(\pos2 + 224)(%rdi)
 
 #
 #   @brief: concatenate signicifant bits so that every coefficients is 12-bit-significant, then don't change the sequence of coefficients(which is different from original) \
-#           as the NTT in one-way AVX2 Kyber is incomplete so they need shuffle to adapt other versions like C or so on.
+#           as the NTT in one-way AVX2 Kyber is incomplete(this word is not accurate here,不完整是说其顺序与7层NTT后的顺序不同，Kyber中NTT都是不完整的) so they need shuffle to adapt other versions like C or so on.
 #   @details: 16-way doesn't use shuffle1,2,4,8 as our NTT is complete. So after pack_sk(), indcpa_keypair() can still adapt to other version Kyber.
 #             
 #

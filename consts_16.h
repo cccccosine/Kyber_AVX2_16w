@@ -36,7 +36,7 @@
 
 #ifndef __ASSEMBLER__
 #include "align.h"
-typedef ALIGNED_INT16(6240) qdata_t_16;
+typedef ALIGNED_INT16(6256) qdata_t_16;     //6144是到basemul结束所需的qdata
 #define qdata_16 KYBER_NAMESPACE(qdata_16)
 extern const qdata_t_16 qdata_16;
 #endif
