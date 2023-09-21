@@ -50,9 +50,9 @@ void kyber_shake256_prf(uint8_t *out,
 #define XOF_BLOCKBYTES SHAKE128_RATE
 
 #define hash_h(OUT, IN, INBYTES) sha3_256(OUT, IN, INBYTES)
-#define hash_hx4(OUT, IN0, IN1, IN2, IN3, INBYTES) sha3x4_256(OUT, IN0, IN1, IN2, IN3, INBYTES)
+#define hash_hx4(OUT0, OUT1, OUT2, OUT3, IN0, IN1, IN2, IN3, INBYTES) sha3x4_256(OUT0, OUT1, OUT2, OUT3, IN0, IN1, IN2, IN3, INBYTES)
 #define hash_g(OUT, IN, INBYTES) sha3_512(OUT, IN, INBYTES)
-#define hash_gx4(OUT, IN0, IN1, IN2, IN3, INBYTES) sha3x4_512(OUT, IN0, IN1, IN2, IN3, INBYTES)
+#define hash_gx4(OUT0, OUT1, OUT2, OUT3, IN0, IN1, IN2, IN3, INBYTES) sha3x4_512(OUT0, OUT1, OUT2, OUT3, IN0, IN1, IN2, IN3, INBYTES)
 #define xof_absorb(STATE, SEED, X, Y) kyber_shake128_absorb(STATE, SEED, X, Y)
 #define xof_squeezeblocks(OUT, OUTBLOCKS, STATE) \
         shake128_squeezeblocks(OUT, OUTBLOCKS, STATE)

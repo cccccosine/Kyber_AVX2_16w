@@ -324,8 +324,9 @@ void polyvec_decompress(polyvec_16 *r, const uint8_t a[KYBER_POLYVECCOMPRESSEDBY
 void polyvec_tobytes(uint8_t r[KYBER_POLYVECBYTES*16], const polyvec_16 *a)
 {
   unsigned int i;
-  for(i=0;i<KYBER_K;i++)
+  for(i=0;i<KYBER_K;i++){
     poly_tobytes(r+i*KYBER_POLYBYTES*16, &a->vec[i]);
+  }
 }
 
 

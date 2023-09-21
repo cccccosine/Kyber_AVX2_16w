@@ -46,10 +46,11 @@ static void unpack_ciphertext(polyvec_16 *b, poly_16 *v, const uint8_t c[KYBER_I
 }
 
 #define NTESTS 100000
+// #define test_zone 1
 // #define all_function_test 1
-#define indcpa_keypair_flag 1
-#define indcpa_enc_flag 1
-#define indcpa_dec_flag 1
+// #define indcpa_keypair_flag 1
+// #define indcpa_enc_flag 1
+// #define indcpa_dec_flag 1
 #define kem_keypair_flag 1
 #define kem_enc_flag 1
 #define kem_dec_flag 1
@@ -58,7 +59,6 @@ uint64_t t[NTESTS];
 
 int main()
 {
-    int i, j;
     uint8_t *pk = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);
     uint8_t *pkseq = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);
     uint8_t *sk = (uint8_t *)malloc(KYBER_SECRETKEYBYTES);
@@ -71,11 +71,40 @@ int main()
     // poly_16 r, p, q;
     // polyvec_16 a, b;
     uint8_t *c = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
-    uint8_t m[KYBER_INDCPA_MSGBYTES * 16];
+    uint8_t m[KYBER_INDCPA_MSGBYTES * 32];
     uint8_t coins[KYBER_SYMBYTES] = {1};
     keccak_state state;
     keccakx4_state statex4;
     uint8_t buffer[168*32];
+
+#ifdef test_zone
+    uint8_t buf[32*16];
+    uint8_t result[32*16];
+
+    for(int i = 0; i < 32*16; i++) {
+        buf[i] = i;
+        result[i] = 0;
+    }
+
+    for(int i = 0; i < 4; i++) {
+    hash_hx4(result+32*i*4, result+32*(i*4+1), result+32*(i*4+2), result+32*(i*4+3), buf+32*i*4, buf+32*(i*4+1), buf+32*(i*4+2), buf+32*(i*4+3), 
+             32);
+    }
+
+    // for(int i = 0; i < 16; i++) {
+    //     hash_h(result+32*i, buf+32*i, 32);
+    // }
+
+    FILE *f = fopen("test_zone.txt", "w+");
+    for(int i = 0; i < 32; i++) {
+        for(int j = 0; j < 16; j++) {
+            fprintf(f, "%7d", result[i*16+j]);
+        }
+        fputs("\n", f);
+    }
+    fclose(f);
+
+#endif
 
 #ifdef all_function_test
 #define gen_a(A, B) gen_matrix(A, B, 0)
@@ -92,45 +121,45 @@ int main()
     // oper_second_n(while (0), poly_basemul_montgomery, poly_basemul_montgomery(&v, &k, &epp),
     //               200000, 16);
 
-    // oper_second_n(while (0), randombytes, randombytes(buf, KYBER_SYMBYTES),
-    //               200000, 16);
-    // oper_second_n(while (0), hash_g, hash_g(buf, buf, KYBER_SYMBYTES),
-    //               200000, 16);
-    // oper_second_n(while (0), gen_a, gen_a(a, publicseed),
-    //               200000, 16);
-    // oper_second_n(while (0), poly_getnoise_eta1_4x, poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, e.vec+0, noiseseed, 0, 1, 2, 3),
-    //               200000, 16);
-    // oper_second_n(while (0), polyvec_ntt, polyvec_ntt(&skpv),
-    //               200000, 16);
-    // oper_second_n(while (0), polyvec_reduce, polyvec_reduce(&skpv),
-    //               200000, 1);
-    // oper_second_n(while (0), polyvec_basemul_acc_montgomery, polyvec_basemul_acc_montgomery(&pkpv.vec[0], &a[0], &skpv),
-    //               20000000, 1);
-    // oper_second_n(while (0), poly_tomont, poly_tomont(&pkpv.vec[0]),
-    //               20000000, 1);
-    // oper_second_n(while (0), polyvec_add, polyvec_add(&pkpv, &pkpv, &e),
-    //               20000000, 1);
+    oper_second_n(while (0), randombytes, randombytes(buf, KYBER_SYMBYTES),
+                  200000, 1);
+    oper_second_n(while (0), hash_g, hash_g(buf, buf, KYBER_SYMBYTES),
+                  200000, 1);
+    oper_second_n(while (0), gen_a, gen_a(a, publicseed),
+                  200000, 16);
+    oper_second_n(while (0), poly_getnoise_eta1_4x, poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, e.vec+0, noiseseed, 0, 1, 2, 3),
+                  200000, 16);
+    oper_second_n(while (0), polyvec_ntt, polyvec_ntt(&skpv),
+                  200000, 16);
+    oper_second_n(while (0), polyvec_reduce, polyvec_reduce(&skpv),
+                  200000, 16);
+    oper_second_n(while (0), polyvec_basemul_acc_montgomery, polyvec_basemul_acc_montgomery(&pkpv.vec[0], &a[0], &skpv),
+                  200000, 16);
+    oper_second_n(while (0), poly_tomont, poly_tomont(&pkpv.vec[0]),
+                  200000, 16);
+    oper_second_n(while (0), polyvec_add, polyvec_add(&pkpv, &pkpv, &e),
+                  200000, 16);
     // polyvec_add(&pkpv, &pkpv, &e);
-    // oper_second_n(while (0), pack_sk, pack_sk(sk, &skpv),
-    //               200000, 1);
-    // oper_second_n(while (0), pack_pk, pack_pk(pk, &pkpv, publicseed),
-    //               200000, 1);
-    // oper_second_n(while (0), unpack_pk, unpack_pk(&pkpv, seed, pk),
-    //               200000, 1);
-    // oper_second_n(while (0), poly_frommsg_16, poly_frommsg_16(&k, m),
-    //               200000, 1);
-    // oper_second_n(while (0), polyvec_invntt_tomont, polyvec_invntt_tomont(&b),
-    //               200000, 1);
-    // oper_second_n(while (0), pack_ciphertext, pack_ciphertext(c, &b, &v),
-    //               200000, 1);
-    // oper_second_n(while (0), unpack_ciphertext, unpack_ciphertext(&b, &v, c),
-    //               200000, 1);
-    // oper_second_n(while (0), unpack_sk, unpack_sk(&skpv, sk),
-    //               200000, 1);
-    // oper_second_n(while (0), poly_sub, poly_sub(&mp, &v, &mp),
-    //               200000, 1);
-    // oper_second_n(while (0), poly_tomsg_16, poly_tomsg_16(m, &mp),
-    //               200000, 1);
+    oper_second_n(while (0), pack_sk, pack_sk(sk, &skpv),
+                  200000, 16);
+    oper_second_n(while (0), pack_pk, pack_pk(pk, &pkpv, publicseed),
+                  200000, 16);
+    oper_second_n(while (0), unpack_pk, unpack_pk(&pkpv, seed, pk),
+                  200000, 16);
+    oper_second_n(while (0), poly_frommsg_16, poly_frommsg_16(&k, m),
+                  200000, 16);
+    oper_second_n(while (0), polyvec_invntt_tomont, polyvec_invntt_tomont(&b),
+                  200000, 16);
+    oper_second_n(while (0), pack_ciphertext, pack_ciphertext(c, &b, &v),
+                  200000, 16);
+    oper_second_n(while (0), unpack_ciphertext, unpack_ciphertext(&b, &v, c),
+                  200000, 16);
+    oper_second_n(while (0), unpack_sk, unpack_sk(&skpv, sk),
+                  200000, 16);
+    oper_second_n(while (0), poly_sub, poly_sub(&mp, &v, &mp),
+                  200000, 16);
+    oper_second_n(while (0), poly_tomsg_16, poly_tomsg_16(m, &mp),
+                  200000, 16);
     // oper_second_n(while (0), pk_formseq, pk_formseq(pk, pkseq),
     //               200000, 16);
     // oper_second_n(while (0), ct_formseq, ct_formseq(ct, ctseq),
@@ -158,24 +187,26 @@ int main()
     // }
     // print_results("indcpa_keypair: ", t, NTESTS);
 
-    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
-                  20000, 16);
+    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
+    //               20000, 16);
 
     FILE *f = fopen("test_indcpakeypair.txt", "w+");
-    if (f == NULL)
-    {
-        printf("Fail to open test_indcpakeypair.txt!");
-        fclose(f);
-        return -1;
-    }
+    // if (f == NULL)
+    // {
+    //     printf("Fail to open test_indcpakeypair.txt!");
+    //     fclose(f);
+    //     return -1;
+    // }
 
-    // indcpa_keypair(pk, sk);
+    indcpa_keypair(pk, sk);
+    // pk_formseq(pk, pkseq);
 
-    for (int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES/16-2; i++)
+    for(int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES/16; i++)
     {
         for(int j = 0; j < 16; j++) {
-            // fprintf(f, "%7d", pk[i*16+j]);
-            fprintf(f, "%7d", sk[i*16+j]);
+            fprintf(f, "%7d", pk[i*16+j]);
+            // fprintf(f, "%7d", pkseq[i*16+j]);
+            // fprintf(f, "%7d", sk[i*16+j]);
         }
         // fprintf(f, "%7d%7d", pk[i], pk[i + 384]);
         fputs("\n", f);
@@ -189,28 +220,28 @@ int main()
     // for(i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES; i++) {
     //     pk[i] = 12;
     // }
-    for (i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
+    for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
     {
-        for(j = 0; j < 16; j++)
+        for(int j = 0; j < 32; j++)
         {
             // m[i*16+j] = i;
-            m[i*16+j] = 1;
+            m[i*32+j] = 1;
         }
     }
 
     FILE *f1 = fopen("test_indcpaenc.txt", "w+");
-    if (f1 == NULL)
-    {
-        printf("Fail to open test_indcpaenc.txt!");
-        fclose(f1);
-        return -1;
-    }
+    // if (f1 == NULL)
+    // {
+    //     printf("Fail to open test_indcpaenc.txt!");
+    //     fclose(f1);
+    //     return -1;
+    // }
 
-    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_enc, indcpa_enc(c, m, pk, coins),
-                  20000, 16);
+    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_enc, indcpa_enc(c, m, pk, coins),
+    //               200000, 16);
 
     // indcpa_enc(c, m, pk, coins, pkpvprint, vprint);
-    // indcpa_enc(c, m, pk, coins);
+    indcpa_enc(c, m, pk, coins);
 
     // ct_formseq(c, ctseq);
 
@@ -220,14 +251,14 @@ int main()
     //     fputs("\n", f1);
     // }
 
-    // for (i = 0; i < (KYBER_INDCPA_BYTES/16); i++)
-    // {
-    //     for (int j = 0; j < 16; j++)
-    //     {
-    //         fprintf(f1, "%7d", c[i*16+j]);
-    //     }
-    //     fputs("\n", f1);
-    // }
+    for (int i = 0; i < (KYBER_INDCPA_BYTES/16); i++)
+    {
+        for (int j = 0; j < 16; j++)
+        {
+            fprintf(f1, "%7d", c[i*16+j]);
+        }
+        fputs("\n", f1);
+    }
     // for(int i = 0; i < KYBER_K; i++) {
     //     for(int j = 0; j < KYBER_N; j++) {
     //         // fprintf(f1, "%7d", skpvprint[(i*KYBER_N+j)*16]);
@@ -253,17 +284,17 @@ int main()
     // int16_t vprint[KYBER_N*16];
 
     FILE *f2 = fopen("test_indcpadec.txt", "w+");
-    if (f2 == NULL)
-    {
-        printf("Fail to open test_indcpadec.txt!");
-        fclose(f2);
-        return -1;
-    }
+    // if (f2 == NULL)
+    // {
+    //     printf("Fail to open test_indcpadec.txt!");
+    //     fclose(f2);
+    //     return -1;
+    // }
 
-    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_dec, indcpa_dec(m, c, sk),
-                  20000, 16);
+    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_dec, indcpa_dec(m, c, sk),
+    //               20000, 16);
 
-    // indcpa_dec(m, c, sk);
+    indcpa_dec(m, c, sk);
     // indcpa_dec(m, c, sk, vprint);
 
     // for(int i = 0; i < KYBER_POLYVECCOMPRESSEDBYTES/16; i++) {
@@ -295,9 +326,9 @@ int main()
 
     for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
     {
-        for (int j = 0; j < 16; j++)
+        for (int j = 0; j < 32; j++)
         {
-            fprintf(f2, "%7d", m[i * 16 + j]);
+            fprintf(f2, "%7d", m[i*32+j]);
         }
         fputs("\n", f2);
     }
@@ -309,6 +340,28 @@ int main()
     oper_second_n(while (0), crypto_kem_keypair_16w, crypto_kem_keypair(pk, sk),
                   20000, 16);
     // crypto_kem_keypair(pk, sk);
+
+    // FILE *f2 = fopen("test_kem_keypair_pk.txt", "w+");
+
+    // for(int i = 0; i < KYBER_PUBLICKEYBYTES/16; i++) {
+    //     for(int j = 0; j < 16; j++) {
+    //         fprintf(f2, "%7d", pk[i*16+j]);
+    //     }
+    //     fputs("\n", f2);
+    // }
+
+    // fclose(f2);
+
+    // FILE *f3 = fopen("test_kem_keypair_sk.txt", "w+");
+
+    // for(int i = 0; i < KYBER_SECRETKEYBYTES/16; i++) {
+    //     for(int j = 0; j < 16; j++) {
+    //         fprintf(f3, "%7d", sk[i*16+j]);
+    //     }
+    //     fputs("\n", f3);
+    // }
+
+    // fclose(f3);
 
 #endif
 
@@ -325,9 +378,11 @@ int main()
     //     return -1;
     // }
 
-    // for (int i = 0; i < 32*16; i++)
+    // for (int i = 0; i < 32; i++)
     // {
-    //     fprintf(f4, "%7d", ss[i]);
+    //     for(int j = 0; j < 16; j++) {
+    //         fprintf(f4, "%7d", ss[j+i*16]);
+    //     }
     //     fputs("\n", f4);
     // }
 
@@ -348,9 +403,11 @@ int main()
     //     return -1;
     // }
 
-    // for (int i = 0; i < 32*16; i++)
+    // for (int i = 0; i < 32; i++)
     // {
-    //     fprintf(f5, "%7d", ss[i]);
+    //     for(int j = 0; j < 16; j++) {
+    //         fprintf(f5, "%7d", ss[j+i*16]);
+    //     }
     //     fputs("\n", f5);
     // }
 
