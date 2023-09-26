@@ -25,7 +25,4 @@ void ntttobytes_avx_16(uint8_t *r, const __m256i *a, const __m256i *qdata);
 #define nttfrombytes_avx_16 KYBER_NAMESPACE(nttfrombytes_avx_16)
 void nttfrombytes_avx_16(__m256i *r, const uint8_t *a, const __m256i *qdata);
 
-#define matrix_formseqto16 KYBER_NAMESPACE(matrix_formseqto16)
-void matrix_formseqto16(__m256i *a, __m256i *aseq, uint16_t num);
-
 #endif

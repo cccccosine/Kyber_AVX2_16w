@@ -11,8 +11,8 @@
 #include "randombytes.h"
 #include "rejsample.h"
 
-// #define test_kem_enc_flag 1
-// #define test_kem_dec_flag 1
+#define test_kem_enc_flag 1
+#define test_kem_dec_flag 1
 
 //16个单独pk需要变成(packed pk)+publicseed的形式才可进行unpack操作
 void pk_separate16(uint8_t *pk, uint8_t *pk_sepa_16) {
@@ -84,7 +84,7 @@ int crypto_kem_enc(uint8_t *ct,
   /* Will store the pk whose format is polyvec * 16 || publicseed * 16, i.e., separating the public key and public seed */
   uint8_t *pk_sepa_16 = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);  //16个单独pk需要变成polyvec+publicseed的形式
   /* Will store the pk in 16-way format without publicseed */
-  uint8_t *pkseq = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);  //将pk中的polyvec部分变成16-way format并存储在pkseq
+  // uint8_t *pkseq = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);  //将pk中的polyvec部分变成16-way format并存储在pkseq
   keccakx4_state state;
   int16_t vprint[KYBER_N*16];
 
