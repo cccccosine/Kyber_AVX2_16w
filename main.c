@@ -224,8 +224,8 @@ int main()
     {
         for(int j = 0; j < 32; j++)
         {
-            // m[i*16+j] = i;
-            m[i*32+j] = 1;
+            m[i*32+j] = i;
+            // m[i*16+j] = 1;
         }
     }
 
@@ -337,9 +337,9 @@ int main()
 #endif
 
 #ifdef kem_keypair_flag
-    oper_second_n(while (0), crypto_kem_keypair_16w, crypto_kem_keypair(pk, sk),
-                  20000, 16);
-    // crypto_kem_keypair(pk, sk);
+    // oper_second_n(while (0), crypto_kem_keypair_16w, crypto_kem_keypair(pk, sk),
+    //               20000, 16);
+    crypto_kem_keypair(pk, sk);
 
     // FILE *f2 = fopen("test_kem_keypair_pk.txt", "w+");
 
@@ -352,25 +352,25 @@ int main()
 
     // fclose(f2);
 
-    // FILE *f3 = fopen("test_kem_keypair_sk.txt", "w+");
+    FILE *f3 = fopen("test_kem_keypair_sk.txt", "w+");
 
-    // for(int i = 0; i < KYBER_SECRETKEYBYTES/16; i++) {
-    //     for(int j = 0; j < 16; j++) {
-    //         fprintf(f3, "%7d", sk[i*16+j]);
-    //     }
-    //     fputs("\n", f3);
-    // }
+    for(int i = 0; i < KYBER_SECRETKEYBYTES/16; i++) {
+        for(int j = 0; j < 16; j++) {
+            fprintf(f3, "%7d", sk[i*16+j]);
+        }
+        fputs("\n", f3);
+    }
 
-    // fclose(f3);
+    fclose(f3);
 
 #endif
 
 #ifdef kem_enc_flag
-    oper_second_n(while (0), crypto_kem_enc_16w, crypto_kem_enc(ct, ss, pk),
-                  20000, 16);
-    // crypto_kem_enc(ct, ss, pk);
+    // oper_second_n(while (0), crypto_kem_enc_16w, crypto_kem_enc(ct, ss, pk),
+    //               200000, 16);
+    crypto_kem_enc(ct, ss, pk);
 
-    // FILE *f4 = fopen("test_kem_enc_ss.txt", "w+");
+    FILE *f4 = fopen("test_kem_enc_ss.txt", "w+");
     // if (f4 == NULL)
     // {
     //     printf("Fail to open test_kem_enc_ss.txt!");
@@ -378,24 +378,24 @@ int main()
     //     return -1;
     // }
 
-    // for (int i = 0; i < 32; i++)
-    // {
-    //     for(int j = 0; j < 16; j++) {
-    //         fprintf(f4, "%7d", ss[j+i*16]);
-    //     }
-    //     fputs("\n", f4);
-    // }
+    for (int i = 0; i < 32; i++)
+    {
+        for(int j = 0; j < 16; j++) {
+            fprintf(f4, "%7d", ss[j+i*16]);
+        }
+        fputs("\n", f4);
+    }
 
-    // fclose(f4);
+    fclose(f4);
 
 #endif
 
 #ifdef kem_dec_flag
-    oper_second_n(while (0), crypto_kem_dec_16w, crypto_kem_dec(ss, ct, sk),
-                  20000, 16);
-    // crypto_kem_dec(ss, ct, sk);
+    // oper_second_n(while (0), crypto_kem_dec_16w, crypto_kem_dec(ss, ct, sk),
+    //               200000, 16);
+    crypto_kem_dec(ss, ct, sk);
 
-    // FILE *f5 = fopen("test_kem_dec_ss.txt", "w+");
+    FILE *f5 = fopen("test_kem_dec_ss.txt", "w+");
     // if (f5 == NULL)
     // {
     //     printf("Fail to open test_kem_dec_ss.txt!");
@@ -403,15 +403,15 @@ int main()
     //     return -1;
     // }
 
-    // for (int i = 0; i < 32; i++)
-    // {
-    //     for(int j = 0; j < 16; j++) {
-    //         fprintf(f5, "%7d", ss[j+i*16]);
-    //     }
-    //     fputs("\n", f5);
-    // }
+    for (int i = 0; i < 32; i++)
+    {
+        for(int j = 0; j < 16; j++) {
+            fprintf(f5, "%7d", ss[j+i*16]);
+        }
+        fputs("\n", f5);
+    }
 
-    // fclose(f5);
+    fclose(f5);
 
 #endif
 
