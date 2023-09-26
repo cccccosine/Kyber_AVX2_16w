@@ -242,9 +242,6 @@ void poly_frommsg_16(poly_16 *restrict r, const uint8_t msg[KYBER_INDCPA_MSGBYTE
 #error "KYBER_INDCPA_MSGBYTES must be equal to 32!"
 #endif
   __m256i f, g0, g1, g2, g3, h0, h1, h2, h3;
-  // const __m256i shift = _mm256_broadcastsi128_si256(_mm_set_epi32(0,1,2,3));
-  // const __m256i idx1 = _mm256_set_epi8(15,15,13,13,11,11,9,9,7,7,5,5,3,3,1,1,14,14,12,12,10,10,8,8,6,6,4,4,2,2,0,0);
-  // const __m256i idx2 = _mm256_set_epi8(31,31,29,29,27,27,25,25,23,23,21,21,19,19,17,17,30,30,28,28,26,26,24,24,22,22,20,20,18,18,16,16);
   const __m256i idx1 = _mm256_set_epi8(15, 15, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10, 9, 9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0);
   const __m256i idx2 = _mm256_set_epi8(31, 31, 30, 30, 29, 29, 28, 28, 27, 27, 26, 26, 25, 25, 24, 24, 23, 23, 22, 22, 21, 21, 20, 20, 19, 19, 18, 18, 17, 17, 16, 16);
 
@@ -320,12 +317,7 @@ void poly_frommsg_16(poly_16 *restrict r, const uint8_t msg[KYBER_INDCPA_MSGBYTE
   _mm256_store_si256(&r->vec[i + 7], g0);  \
   _mm256_store_si256(&r->vec[i + 15], g1);
 
-  f = _mm256_loadu_si256((__m256i *)msg); // 认为msg内部结构为a0-p0, a1-p1,...., a31-p31
-// g2 = _mm256_shuffle_epi8(f, idx1);
-// g0 = _mm256_slli_epi16(g2, 15);
-// g0 = _mm256_srai_epi16(g0, 15);
-// g0 = _mm256_and_si256(g0, hqs);
-// _mm256_store_si256(&r->vec[0], g0);
+  f = _mm256_loadu_si256((__m256i *)msg); // the structure of msg is a0-p0, a1-p1,...., a31-p31
   FROMMSG64(0);
   f = _mm256_loadu_si256((__m256i *)(msg + 32));
   FROMMSG64(16);
@@ -604,11 +596,6 @@ void poly_invntt_tomont(poly_16 *r)
 {
   invntt_avx_16(r->vec, qdata_16.vec);
 }
-
-// void poly_nttunpack(poly_16 *r)
-// {
-//   nttunpack_avx_16(r->vec);
-// }
 
 void poly_basemul_montgomery(poly_16 *r, const poly_16 *a, const poly_16 *b)
 {

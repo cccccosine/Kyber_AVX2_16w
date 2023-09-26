@@ -12,7 +12,6 @@
 #define _16XMONTSQHI_16    6208
 #define _16XMASK_16        6224
 #define _ZETAS_EXP_16      16
-//#define	_16XSHIFT      624
 
 
 #define _ZETAS_BASEMUL 4096

@@ -546,6 +546,12 @@ void sha3x4_512(uint8_t *out0,
   unsigned int i;
   __m256i s[25];
 
+<<<<<<< HEAD
+  keccakx4_absorb_once(s, SHA3_512_RATE, in0, in1, in2, in3, inlen, 0x06);
+  KeccakF1600_StatePermute(s);
+  for(i=0;i<8;i++)
+    _mm256_storeu_si256((__m256i *)&h[i*32], s[i]);
+=======
   keccakx4_absorb_once(s, SHA3_512_RATE, in0, in1, in2, in3, inlen, 0x06);// p ?= 0x06
   KeccakF1600_StatePermute4x(s);
   for(i = 0; i < 8; i++) {
@@ -564,5 +570,6 @@ void sha3x4_512(uint8_t *out0,
   // _mm256_storeu_si256((__m256i *)&out2[32], s[5]);
   // _mm256_storeu_si256((__m256i *)&out3[0], s[6]);
   // _mm256_storeu_si256((__m256i *)&out3[32], s[7]);
+>>>>>>> f0d36eff07b061de2338c1d6215e63b7968787be
 
 }

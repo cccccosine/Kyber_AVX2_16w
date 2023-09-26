@@ -276,7 +276,7 @@ unsigned int rej_uniform_avx(int16_t * restrict r, const uint8_t *buf)
   unsigned int ctr, pos;
   uint16_t val0, val1;
   uint32_t good;
-#ifdef BMI     //关于BMI都没改
+#ifdef BMI
   uint64_t idx0, idx1, idx2, idx3;
 #endif
   const __m256i bound  = _mm256_load_si256(&qdata_16.vec[_16XQ_16/16]);
@@ -294,10 +294,10 @@ unsigned int rej_uniform_avx(int16_t * restrict r, const uint8_t *buf)
     f0 = _mm256_loadu_si256((__m256i *)&buf[pos]);  //f0 = buf[31:0], 这里f0只存了24个数可能是因为后续只用到了24个数
     f1 = _mm256_loadu_si256((__m256i *)&buf[pos+24]); //f1 = buf[56:24],这里数组内部全部左高右低表示，以适配avx2指令
     //0x94 = 1001 0100
-    f0 = _mm256_permute4x64_epi64(f0, 0x94);  //f0 = f0[191:128,127:64,127:64,63:0] = buf[23:16,15:8,15:8,7:0]
-    f1 = _mm256_permute4x64_epi64(f1, 0x94);  //f1 = f1[191:128,127:64,127:64,63:0] = buf[47:40,39:32,39:32,31:24]
-    f0 = _mm256_shuffle_epi8(f0, idx8);  //f0 = f0[,0000,0000,0000,55:48,39:32,31:24,15:8,7:0] = buf[14,13,11,10,8,7,5,4,0000,0000,0000,6,4,3,1,0]
-    f1 = _mm256_shuffle_epi8(f1, idx8);  //f1 = f1[,55:48,39:32,31:24,15:8,7:0] = buf[14,13,11,10,8,7,5,4,10,9,7,6,4,3,1,0]
+    f0 = _mm256_permute4x64_epi64(f0, 0x94);
+    f1 = _mm256_permute4x64_epi64(f1, 0x94);
+    f0 = _mm256_shuffle_epi8(f0, idx8);
+    f1 = _mm256_shuffle_epi8(f1, idx8);
     g0 = _mm256_srli_epi16(f0, 4);
     g1 = _mm256_srli_epi16(f1, 4);
     f0 = _mm256_blend_epi16(f0, g0, 0xAA);

@@ -506,17 +506,10 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
     poly_cbd_eta1(&e.vec[i], coins.vec);
   }
 #else
-#if KYBER_K == 2    //not changed
+#if KYBER_K == 2
   poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, e.vec+0, e.vec+1, noiseseed, 0, 1, 2, 3);
 #elif KYBER_K == 3 
-  // for (j = 0; j < KYBER_K; j++) {
-  //   for(k = 0; k < 256; k++) {
-  //     for(p = 0; p < 16; p++) {
-  //       skpv.vec[j].coeffs[k*16+p] = 19;
-  //       e.vec[j].coeffs[k*16+p] = 19;
-  //     }
-  //   }
-  // }
+
   poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, skpv.vec+2, e.vec+0, noiseseed, 0, 1, 2, 3);
   poly_getnoise_eta1_4x(e.vec+1, e.vec+2, pkpv.vec+0, pkpv.vec+1, noiseseed, 4, 5, 6, 7);
   polyvec_formseqto16(&skpv, &skpvseq);
@@ -586,16 +579,6 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
 
   msg_formseqto16(m, mseq);
   poly_frommsg_16(&k, mseq);
-
-  // for (i = 0; i < KYBER_K; i++) {
-  //   for (j = 0; j < KYBER_K; j++) {
-  //     for(p = 0; p < KYBER_N; p++) {
-  //       for(l = 0; l < 16; l++) {
-  //         at[i].vec[j].coeffs[p*16+l] = 1;
-  //       }
-  //     }
-  //   }
-  // }
 
   gen_at(at, seed);
   matrix_formseqto16(at, atseq, 0);
@@ -675,27 +658,12 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   pack_ciphertext(cseq, &b, &v);
   cipher_formseqfrom16(cseq, c);
 
-  // for(i = 0; i < KYBER_K; i++) {
-  //   for(j = 0; j < KYBER_N*16; j++) {
-  //     // skpvprint[i*KYBER_N*16+j] = skpv.vec[i].coeffs[j];
-  //     // pkpvprint[i*KYBER_N*16+j] = pkpv.vec[i].coeffs[j];
-  //     // pkpvprint[i*KYBER_N*16+j] = e.vec[i].coeffs[j];
-  //     // pkpvprint[i*KYBER_N*16+j] = a[1].vec[i].coeffs[j];
-  //     pkpvprint[i*KYBER_N*16+j] = b.vec[i].coeffs[j];
-  //     // pkpvprint[i*KYBER_N*16+j] = sp.vec[i].coeffs[j];
-  //   }
-  // }
-  // for(i = 0; i < KYBER_N*16; i++) {
-  //   vprint[i] = v.coeffs[i];
-  // }
 }
 
 
 void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*32],
                 const uint8_t c[KYBER_INDCPA_BYTES],
                 const uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]
-                // int16_t bprint[KYBER_K*KYBER_N*16],
-                // int16_t vprint[KYBER_N*16]
                 )
 {
   polyvec_16 b, skpvseq;

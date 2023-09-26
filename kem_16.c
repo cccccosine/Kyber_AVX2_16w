@@ -226,11 +226,9 @@ int crypto_kem_dec(uint8_t *ss,
     hash_gx4(kr+8*i*KYBER_SYMBYTES, kr+(8*i+2)*KYBER_SYMBYTES, kr+(8*i+4)*KYBER_SYMBYTES, kr+(8*i+6)*KYBER_SYMBYTES, buf+8*i*KYBER_SYMBYTES, buf+(8*i+2)*KYBER_SYMBYTES, buf+(8*i+4)*KYBER_SYMBYTES, buf+(8*i+6)*KYBER_SYMBYTES, KYBER_SYMBYTES*2);
   }
 
-  /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(cmp.coeffs, buf, pk, kr+KYBER_SYMBYTES);
 
   fail = verify(ct, cmp.coeffs, KYBER_CIPHERTEXTBYTES);
-  // printf("fail: %d\n", fail);
 
   /* overwrite coins in kr with H(c) */
   for(int i = 0; i < 4; i++) {

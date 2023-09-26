@@ -12,38 +12,6 @@
 #include "cpucycles.h"
 #include "speed_print.h"
 
-static void pack_pk(uint8_t r[KYBER_INDCPA_PUBLICKEYBYTES],
-                    polyvec_16 *pk,
-                    const uint8_t seed[KYBER_SYMBYTES])
-{
-    polyvec_tobytes(r, pk);
-    memcpy(r + KYBER_POLYVECBYTES * 16, seed, KYBER_SYMBYTES);
-}
-static void unpack_pk(polyvec_16 *pk,
-                      uint8_t seed[KYBER_SYMBYTES],
-                      const uint8_t packedpk[KYBER_INDCPA_PUBLICKEYBYTES])
-{
-    polyvec_frombytes(pk, packedpk);
-    memcpy(seed, packedpk + KYBER_POLYVECBYTES * 16, KYBER_SYMBYTES);
-}
-static void pack_sk(uint8_t r[KYBER_INDCPA_SECRETKEYBYTES], polyvec_16 *sk)
-{
-    polyvec_tobytes(r, sk);
-}
-static void unpack_sk(polyvec_16 *sk, const uint8_t packedsk[KYBER_INDCPA_SECRETKEYBYTES])
-{
-    polyvec_frombytes(sk, packedsk);
-}
-static void pack_ciphertext(uint8_t r[KYBER_INDCPA_BYTES], polyvec_16 *b, poly_16 *v)
-{
-    polyvec_compress(r, b);
-    poly_compress(r + KYBER_POLYVECCOMPRESSEDBYTES, v);
-}
-static void unpack_ciphertext(polyvec_16 *b, poly_16 *v, const uint8_t c[KYBER_INDCPA_BYTES])
-{
-    polyvec_decompress(b, c);
-    poly_decompress(v, c + KYBER_POLYVECCOMPRESSEDBYTES);
-}
 
 #define NTESTS 100000
 // #define test_zone 1
@@ -55,21 +23,14 @@ static void unpack_ciphertext(polyvec_16 *b, poly_16 *v, const uint8_t c[KYBER_I
 #define kem_enc_flag 1
 #define kem_dec_flag 1
 
-uint64_t t[NTESTS];
 
 int main()
 {
     uint8_t *pk = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);
-    uint8_t *pkseq = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);
     uint8_t *sk = (uint8_t *)malloc(KYBER_SECRETKEYBYTES);
     uint8_t *ct = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
     uint8_t *ctseq = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
     uint8_t *ss = (uint8_t *)malloc(KYBER_SSBYTES*16);
-    // int16_t skpvprint[KYBER_K*KYBER_N*16];
-    // int16_t pkpvprint[KYBER_K*KYBER_N*16];
-    int16_t vprint[KYBER_N*16];
-    // poly_16 r, p, q;
-    // polyvec_16 a, b;
     uint8_t *c = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
     uint8_t m[KYBER_INDCPA_MSGBYTES * 32];
     uint8_t coins[KYBER_SYMBYTES] = {1};
@@ -116,10 +77,7 @@ int main()
     uint8_t r[320 * 16];
     polyvec_16 a[KYBER_K], skpv, e, pkpv, b;
     poly_16 v, k, epp, mp;
-    uint8_t seed[KYBER_SYMBYTES];
 
-    // oper_second_n(while (0), poly_basemul_montgomery, poly_basemul_montgomery(&v, &k, &epp),
-    //               200000, 16);
 
     oper_second_n(while (0), randombytes, randombytes(buf, KYBER_SYMBYTES),
                   200000, 1);
@@ -181,11 +139,6 @@ int main()
 #endif
 
 #ifdef indcpa_keypair_flag
-    // for(int i=0;i<NTESTS;i++) {
-    //     t[i] = cpucycles();
-    //     indcpa_keypair(pk, sk);
-    // }
-    // print_results("indcpa_keypair: ", t, NTESTS);
 
     // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
     //               20000, 16);
@@ -212,7 +165,7 @@ int main()
         fputs("\n", f);
     }
 
-    fclose(f);
+    // fclose(f);
 
 #endif
 
@@ -274,7 +227,7 @@ int main()
     //     fputs("\n", f1);
     // }
 
-    fclose(f1);
+    // fclose(f1);
 #endif
 
 #ifdef indcpa_dec_flag
@@ -304,13 +257,13 @@ int main()
     //     fputs("\n", f2);
     // }
 
-    // for(int i = 0; i < KYBER_K; i++) {
-    //     for(int j = 0; j < KYBER_N; j++) {
-    //         // fprintf(f2, "%7d", skpvprint[(i*KYBER_N+j)*16]);
-    //         // fprintf(f2, "%7d", pkpvprint[(i*KYBER_N+j)*16]);
-    //         fprintf(f2, "%7d", bprint[i*KYBER_N+j]);
-    //         fputs("\n", f2);
+    // for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
+    // {
+    //     for (int j = 0; j < 16; j++)
+    //     {
+    //         fprintf(f2, "%7d", m[i * 16 + j]);
     //     }
+    //     fputs("\n", f2);
     // }
 
     // for(int i = 0; i < KYBER_K; i++) {
@@ -416,7 +369,6 @@ int main()
 #endif
 
     free(pk);
-    free(pkseq);
     free(sk);
     free(c);
     free(ct);
