@@ -4,17 +4,17 @@
 #include "params.h"
 
 #define _16XQ_16           0
+#define _ZETAS_EXP_16      16
 #define _16XQINV_16        4080
+#define _ZETAS_BASEMUL     4096
 #define _16XFLO_16         6144
 #define _16XFHI_16         6160
 #define _16XV_16           6176
 #define _16XMONTSQLO_16    6192
 #define _16XMONTSQHI_16    6208
 #define _16XMASK_16        6224
-#define _ZETAS_EXP_16      16
-
-
-#define _ZETAS_BASEMUL 4096
+#define SEQ_SHUFIDX_16     6240
+#define SEQ_INVSHUFIDX_16  6256
 
 
 /* The C ABI on MacOS exports all symbols with a leading
@@ -36,7 +36,7 @@
 
 #ifndef __ASSEMBLER__
 #include "align.h"
-typedef ALIGNED_INT16(6256) qdata_t_16;     //6144是到basemul结束所需的qdata
+typedef ALIGNED_INT16(6272) qdata_t_16;     //6144是到basemul结束所需的qdata
 #define qdata_16 KYBER_NAMESPACE(qdata_16)
 extern const qdata_t_16 qdata_16;
 #endif
