@@ -11,8 +11,8 @@
 #include "randombytes.h"
 #include "rejsample.h"
 
-#define test_kem_enc_flag 1
-#define test_kem_dec_flag 1
+// #define test_kem_enc_flag 1
+// #define test_kem_dec_flag 1
 
 //16个单独pk需要变成(packed pk)+publicseed的形式才可进行unpack操作
 void pk_separate16(uint8_t *pk, uint8_t *pk_sepa_16) {
@@ -220,8 +220,8 @@ int crypto_kem_dec(uint8_t *ss,
     memcpy(buf+KYBER_SYMBYTES*(2*i+1), sk+KYBER_SECRETKEYBYTES*i/16+2*KYBER_POLYVECBYTES+KYBER_SYMBYTES, KYBER_SYMBYTES);
   }
   
-  //buf = (m||H(pk)) * 16
-  //kr = (K||r) * 16
+  //Now, buf = (m||H(pk)) * 16
+  //Now, kr = (K||r) * 16
   for(int i = 0; i < 4; i++) {
     hash_gx4(kr+8*i*KYBER_SYMBYTES, kr+(8*i+2)*KYBER_SYMBYTES, kr+(8*i+4)*KYBER_SYMBYTES, kr+(8*i+6)*KYBER_SYMBYTES, buf+8*i*KYBER_SYMBYTES, buf+(8*i+2)*KYBER_SYMBYTES, buf+(8*i+4)*KYBER_SYMBYTES, buf+(8*i+6)*KYBER_SYMBYTES, KYBER_SYMBYTES*2);
   }
