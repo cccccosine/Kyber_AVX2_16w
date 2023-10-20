@@ -48,7 +48,7 @@ void poly_formseqto16(poly_16 *p, poly_16 *t, poly_16 *pseq) {
   poly_formseqto16_AVX2(p->vec, t->vec, pseq->vec, qdata_16.vec);
 }
 
-void keypair_formseqfrom16(uint8_t *keyseq, uint8_t *t, uint8_t *key) {  //所有from16暂时不替换为AVX2
+void keypair_formseqfrom16(uint8_t *keyseq, uint8_t *t, uint8_t *key) {
   for(int i = 0; i < 3; i++) {
     // for(int j = 0; j < 192; j++) {
     //   for(int k = 0; k < 16; k++) {
@@ -475,8 +475,11 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   const uint8_t *noiseseed = buf + KYBER_SYMBYTES;
   polyvec_16 a[KYBER_K], aseq[KYBER_K], t[KYBER_K], skpv, skpvseq, tpv, e, eseq, pkpv, pkpvseq;
 
-  randombytes(buf, KYBER_SYMBYTES);
-  hash_g(buf, buf, KYBER_SYMBYTES);
+  randombytes(buf+KYBER_SYMBYTES*16, KYBER_SYMBYTES*16);  //只需要生成一半的随机数并放在后半部分的内存中，之后hash_gx4从后半部分开始取，生成的数从头开始存
+  for(int i = 0; i < 4; i++) {
+    hash_gx4(buf+8*i*KYBER_SYMBYTES, buf+(8*i+2)*KYBER_SYMBYTES, buf+(8*i+4)*KYBER_SYMBYTES, buf+(8*i+6)*KYBER_SYMBYTES, buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*i*4, buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+1), buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+2), buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+3), KYBER_SYMBYTES);
+  }
+  // hash_g(buf, buf, KYBER_SYMBYTES);
 
   // for (i = 0; i < KYBER_K; i++) {
   //   for (j = 0; j < KYBER_K; j++) {
