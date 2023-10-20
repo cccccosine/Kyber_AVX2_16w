@@ -27,7 +27,6 @@ int main()
     uint8_t *pk = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);
     uint8_t *sk = (uint8_t *)malloc(KYBER_SECRETKEYBYTES);
     uint8_t *ct = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
-    uint8_t *ctseq = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
     uint8_t *ss = (uint8_t *)malloc(KYBER_SSBYTES * 16);
     uint8_t *c = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
     uint8_t m[KYBER_INDCPA_MSGBYTES * 32];
@@ -74,11 +73,11 @@ int main()
 #define gen_at(A, B) gen_matrix(A, B, 1)
 
     uint8_t buf[2 * KYBER_SYMBYTES] = {0};
-    const uint8_t *publicseed = buf;
-    const uint8_t *noiseseed = buf + KYBER_SYMBYTES;
-    uint8_t r[320 * 16];
+    // const uint8_t *publicseed = buf;
+    // const uint8_t *noiseseed = buf + KYBER_SYMBYTES;
+    // uint8_t r[320 * 16];
     polyvec_16 a[KYBER_K], skpv, e, pkpv, b;
-    poly_16 v, k, epp, mp;
+    // poly_16 v, k, epp, mp;
 
     // oper_second_n(while (0), randombytes, randombytes(buf, KYBER_SYMBYTES),
     //               200000, 1);
@@ -355,7 +354,6 @@ int main()
     free(sk);
     free(c);
     free(ct);
-    free(ctseq);
     free(ss);
 
     return 0;

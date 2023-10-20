@@ -470,7 +470,10 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
                     uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES])
 {
   unsigned int i, j, k, p;
-  uint8_t buf[2*KYBER_SYMBYTES*16], pkseq[KYBER_INDCPA_PUBLICKEYBYTES], skseq[KYBER_INDCPA_SECRETKEYBYTES], tkp[KYBER_INDCPA_PUBLICKEYBYTES];
+  uint8_t buf[2*KYBER_SYMBYTES*16];// pkseq[KYBER_INDCPA_PUBLICKEYBYTES], skseq[KYBER_INDCPA_SECRETKEYBYTES], tkp[KYBER_INDCPA_PUBLICKEYBYTES];
+  uint8_t *pkseq = (uint8_t *)malloc(KYBER_INDCPA_PUBLICKEYBYTES);
+  uint8_t *skseq = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
+  uint8_t *tkp = (uint8_t *)malloc(KYBER_INDCPA_PUBLICKEYBYTES);
   const uint8_t *publicseed = buf;
   const uint8_t *noiseseed = buf + KYBER_SYMBYTES;
   polyvec_16 a[KYBER_K], aseq[KYBER_K], t[KYBER_K], skpv, skpvseq, tpv, e, eseq, pkpv, pkpvseq;
@@ -561,6 +564,10 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 
   memcpy(pk+KYBER_POLYVECBYTES*16, publicseed, KYBER_SYMBYTES*16*2);
 
+  free(pkseq);
+  free(skseq);
+  free(tkp);
+
 }
 
 
@@ -573,7 +580,11 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
                 )
 {
   unsigned int i, j, l, p;
-  uint8_t seed[KYBER_SYMBYTES*32], mseq[KYBER_INDCPA_MSGBYTES*32], cseq[KYBER_INDCPA_BYTES], tc[KYBER_INDCPA_BYTES], pkseq[KYBER_INDCPA_PUBLICKEYBYTES], tpk[KYBER_INDCPA_PUBLICKEYBYTES];
+  uint8_t seed[KYBER_SYMBYTES*32], mseq[KYBER_INDCPA_MSGBYTES*32]; //cseq[KYBER_INDCPA_BYTES], tc[KYBER_INDCPA_BYTES], pkseq[KYBER_INDCPA_PUBLICKEYBYTES], tpk[KYBER_INDCPA_PUBLICKEYBYTES];
+  uint8_t *cseq = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
+  uint8_t *tc = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
+  uint8_t *pkseq = (uint8_t *)malloc(KYBER_INDCPA_PUBLICKEYBYTES);
+  uint8_t *tpk = (uint8_t *)malloc(KYBER_INDCPA_PUBLICKEYBYTES);
   polyvec_16 sp, spseq, tpv, pkpvseq, ep, epseq, at[KYBER_K], t[KYBER_K], atseq[KYBER_K], b;
   poly_16 v, k, epp, tp, eppseq;
 
@@ -685,6 +696,11 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   pack_ciphertext(cseq, &b, &v);
   cipher_formseqfrom16(cseq, tc, c);
 
+  free(cseq);
+  free(tc);
+  free(pkseq);
+  free(tpk);
+
 }
 
 
@@ -695,7 +711,11 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*32],
 {
   polyvec_16 b, skpvseq;
   poly_16 v, mp;
-  uint8_t cseq[KYBER_INDCPA_BYTES], tc[KYBER_INDCPA_BYTES], mseq[KYBER_INDCPA_MSGBYTES*32], skseq[KYBER_INDCPA_SECRETKEYBYTES], tsk[KYBER_INDCPA_SECRETKEYBYTES];
+  uint8_t mseq[KYBER_INDCPA_MSGBYTES*32]; //skseq[KYBER_INDCPA_SECRETKEYBYTES], tsk[KYBER_INDCPA_SECRETKEYBYTES], cseq[KYBER_INDCPA_BYTES], tc[KYBER_INDCPA_BYTES];
+  uint8_t *cseq = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
+  uint8_t *tc = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
+  uint8_t *skseq = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
+  uint8_t *tsk = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
 
   cipher_formseqto16(c, tc, cseq);
   unpack_ciphertext(&b, &v, cseq);
@@ -739,4 +759,10 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*32],
 
   poly_tomsg_16(mseq, &mp);
   msg_formseqfrom16(mseq, m);
+
+  free(cseq);
+  free(tc);
+  free(skseq);
+  free(tsk);
+  
 }

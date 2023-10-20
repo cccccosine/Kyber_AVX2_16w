@@ -79,8 +79,6 @@ int crypto_kem_enc(uint8_t *ct,
   uint8_t buf[7*SHAKE128_RATE];
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES*16];
-  /* Will store the ct with rearranged sequence */
-  uint8_t *ctseq = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
   /* Will store the pk whose format is polyvec * 16 || publicseed * 16, i.e., separating the public key and public seed */
   uint8_t *pk_sepa_16 = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);  //16个单独pk需要变成polyvec+publicseed的形式
   /* Will store the pk in 16-way format without publicseed */
@@ -190,6 +188,8 @@ int crypto_kem_enc(uint8_t *ct,
   for(int i = 0; i < 4; i++) {
     kdfx4(ss + 4*i*KYBER_SSBYTES, ss + (4*i+1)*KYBER_SSBYTES, ss + (4*i+2)*KYBER_SSBYTES, ss + (4*i+3)*KYBER_SSBYTES, kr+8*i*KYBER_SYMBYTES, kr+(8*i+2)*KYBER_SYMBYTES, kr+(8*i+4)*KYBER_SYMBYTES, kr+(8*i+6)*KYBER_SYMBYTES, 2*KYBER_SYMBYTES);
   }
+
+  free(pk_sepa_16);
   
   return 0;
 }
@@ -204,9 +204,11 @@ int crypto_kem_dec(uint8_t *ss,
   uint8_t buf[32*KYBER_SYMBYTES];
   /* Will contain key, coins */
   uint8_t kr[2*16*KYBER_SYMBYTES];
-  uint8_t skseq[KYBER_INDCPA_SECRETKEYBYTES], sk_sepa_16[KYBER_INDCPA_SECRETKEYBYTES], pk[KYBER_INDCPA_PUBLICKEYBYTES];  //sk_sepa_16和pk变量是将sk从整体sk中分离出来
+  uint8_t *skseq = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
+  uint8_t *sk_sepa_16 = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
+  uint8_t *pk = (uint8_t *)malloc(KYBER_INDCPA_PUBLICKEYBYTES);
+  // uint8_t skseq[KYBER_INDCPA_SECRETKEYBYTES], sk_sepa_16[KYBER_INDCPA_SECRETKEYBYTES], pk[KYBER_INDCPA_PUBLICKEYBYTES];  //sk_sepa_16和pk变量是将sk从整体sk中分离出来
   ALIGNED_UINT8(KYBER_CIPHERTEXTBYTES) cmp;
-  uint8_t *ctseq = (uint8_t *)malloc(KYBER_CIPHERTEXTBYTES);
 
   for(int i = 0; i < 16; i++) {
     memcpy(sk_sepa_16+i*KYBER_INDCPA_SECRETKEYBYTES/16, sk+KYBER_SECRETKEYBYTES*i/16, KYBER_POLYVECBYTES);
@@ -282,6 +284,10 @@ int crypto_kem_dec(uint8_t *ss,
   for(int i = 0; i < 4; i++) {
     kdfx4(ss + 4*i*KYBER_SSBYTES, ss + (4*i+1)*KYBER_SSBYTES, ss + (4*i+2)*KYBER_SSBYTES, ss + (4*i+3)*KYBER_SSBYTES, kr+8*i*KYBER_SYMBYTES, kr+(8*i+2)*KYBER_SYMBYTES, kr+(8*i+4)*KYBER_SYMBYTES, kr+(8*i+6)*KYBER_SYMBYTES, 2*KYBER_SYMBYTES);
   }
+
+  free(skseq);
+  free(sk_sepa_16);
+  free(pk);
 
   return 0;
 }
