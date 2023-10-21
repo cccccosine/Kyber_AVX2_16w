@@ -14,13 +14,13 @@
 
 #define NTESTS 100000
 // #define test_zone 1
-#define all_function_test 1
+// #define all_function_test 1
 #define indcpa_keypair_flag 1
-#define indcpa_enc_flag 1
-#define indcpa_dec_flag 1
-#define kem_keypair_flag 1
-#define kem_enc_flag 1
-#define kem_dec_flag 1
+// #define indcpa_enc_flag 1
+// #define indcpa_dec_flag 1
+// #define kem_keypair_flag 1
+// #define kem_enc_flag 1
+// #define kem_dec_flag 1
 
 int main()
 {
