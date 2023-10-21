@@ -14,10 +14,10 @@
 
 #define NTESTS 100000
 // #define test_zone 1
-// #define all_function_test 1
-// #define indcpa_keypair_flag 1
-// #define indcpa_enc_flag 1
-// #define indcpa_dec_flag 1
+#define all_function_test 1
+#define indcpa_keypair_flag 1
+#define indcpa_enc_flag 1
+#define indcpa_dec_flag 1
 #define kem_keypair_flag 1
 #define kem_enc_flag 1
 #define kem_dec_flag 1
@@ -122,44 +122,44 @@ int main()
     //               200000, 16);
     // oper_second_n(while (0), ct_formseq, ct_formseq(ct, ctseq),
     //               200000, 16);
-    // oper_second_n(while (0), shake128_absorb_once, shake128_absorb_once(&state, buffer, 168),
-    //               200000, 1);
-    // oper_second_n(while (0), shake128_absorb_once, shake128_absorb_once(&state, buffer, 32),
-    //               200000, 1);
-    // oper_second_n(while (0), shake128_squeezeblocks, shake128_squeezeblocks(buffer, 1, &state),
-    //               200000, 1);
-    // oper_second_n(while (0), shake128x4_absorb_once, shake128x4_absorb_once(&statex4, buffer, buffer+1, buffer+2, buffer+3, 168),
-    //               200000, 1);
-    // oper_second_n(while (0), shake128x4_absorb_once, shake128x4_absorb_once(&statex4, buffer, buffer+1, buffer+2, buffer+3, 32),
-    //               200000, 1);
-    // oper_second_n(while (0), shake128x4_squeezeblocks, shake128x4_squeezeblocks(buffer, buffer+5, buffer+10, buffer+15, 1, &statex4),
-    //               200000, 1);
+    oper_second_n(while (0), shake128_absorb_once, shake128_absorb_once(&state, buffer, 168),
+                  200000, 1);
+    oper_second_n(while (0), shake128_absorb_once, shake128_absorb_once(&state, buffer, 32),
+                  200000, 1);
+    oper_second_n(while (0), shake128_squeezeblocks, shake128_squeezeblocks(buffer, 1, &state),
+                  200000, 1);
+    oper_second_n(while (0), shake128x4_absorb_once, shake128x4_absorb_once(&statex4, buffer, buffer+1, buffer+2, buffer+3, 168),
+                  200000, 1);
+    oper_second_n(while (0), shake128x4_absorb_once, shake128x4_absorb_once(&statex4, buffer, buffer+1, buffer+2, buffer+3, 32),
+                  200000, 1);
+    oper_second_n(while (0), shake128x4_squeezeblocks, shake128x4_squeezeblocks(buffer, buffer+5, buffer+10, buffer+15, 1, &statex4),
+                  200000, 4);
 
 #endif
 
 #ifdef indcpa_keypair_flag
 
-    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
-    //               20000, 16);
+    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
+                  200000, 16);
 
-    FILE *f = fopen("test_indcpakeypair.txt", "w+");
+    // FILE *f = fopen("test_indcpakeypair.txt", "w+");
    
-    indcpa_keypair(pk, sk);
+    // indcpa_keypair(pk, sk);
     // pk_formseq(pk, pkseq);
 
-    for (int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES / 16; i++)
-    {
-        for (int j = 0; j < 16; j++)
-        {
-            fprintf(f, "%7d", pk[i * 16 + j]);
-            // fprintf(f, "%7d", pkseq[i*16+j]);
-            // fprintf(f, "%7d", sk[i*16+j]);
-        }
-        // fprintf(f, "%7d%7d", pk[i], pk[i + 384]);
-        fputs("\n", f);
-    }
+    // for (int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES / 16; i++)
+    // {
+    //     for (int j = 0; j < 16; j++)
+    //     {
+    //         fprintf(f, "%7d", pk[i * 16 + j]);
+    //         // fprintf(f, "%7d", pkseq[i*16+j]);
+    //         // fprintf(f, "%7d", sk[i*16+j]);
+    //     }
+    //     // fprintf(f, "%7d%7d", pk[i], pk[i + 384]);
+    //     fputs("\n", f);
+    // }
 
-    fclose(f);
+    // fclose(f);
 
 #endif
 
@@ -167,22 +167,22 @@ int main()
     // for(i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES; i++) {
     //     pk[i] = 12;
     // }
-    for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
-    {
-        for (int j = 0; j < 32; j++)
-        {
-            // m[i * 32 + j] = i;
-            m[i*32+j] = 1;
-        }
-    }
+    // for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
+    // {
+    //     for (int j = 0; j < 32; j++)
+    //     {
+    //         // m[i * 32 + j] = i;
+    //         m[i*32+j] = 1;
+    //     }
+    // }
 
     // FILE *f1 = fopen("test_indcpaenc.txt", "w+");
 
-    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_enc, indcpa_enc(c, m, pk, coins),
-    //               20000, 16);
+    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_enc, indcpa_enc(c, m, pk, coins),
+                  200000, 16);
 
     // indcpa_enc(c, m, pk, coins, pkpvprint, vprint);
-    indcpa_enc(c, m, pk, coins);
+    // indcpa_enc(c, m, pk, coins);
 
     // ct_formseq(c, ctseq);
 
@@ -224,12 +224,12 @@ int main()
     // int16_t bprint[KYBER_K*KYBER_N*16];
     // int16_t vprint[KYBER_N*16];
 
-    FILE *f2 = fopen("test_indcpadec.txt", "w+");
+    // FILE *f2 = fopen("test_indcpadec.txt", "w+");
 
-    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_dec, indcpa_dec(m, c, sk),
-    //               20000, 16);
+    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_dec, indcpa_dec(m, c, sk),
+                  200000, 16);
 
-    indcpa_dec(m, c, sk);
+    // indcpa_dec(m, c, sk);
     // indcpa_dec(m, c, sk, vprint);
 
     // for(int i = 0; i < KYBER_POLYVECCOMPRESSEDBYTES/16; i++) {
@@ -259,21 +259,21 @@ int main()
     // }
     // free(bprint);
 
-    for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
-    {
-        for (int j = 0; j < 32; j++)
-        {
-            fprintf(f2, "%7d", m[i * 32 + j]);
-        }
-        fputs("\n", f2);
-    }
+    // for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
+    // {
+    //     for (int j = 0; j < 32; j++)
+    //     {
+    //         fprintf(f2, "%7d", m[i * 32 + j]);
+    //     }
+    //     fputs("\n", f2);
+    // }
 
-    fclose(f2);
+    // fclose(f2);
 #endif
 
 #ifdef kem_keypair_flag
     oper_second_n(while (0), crypto_kem_keypair_16w, crypto_kem_keypair(pk, sk),
-                  20000, 16);
+                  200000, 16);
     // crypto_kem_keypair(pk, sk);
 
     // FILE *f3 = fopen("test_kem_keypair_pk.txt", "w+");
@@ -302,7 +302,7 @@ int main()
 
 #ifdef kem_enc_flag
     oper_second_n(while (0), crypto_kem_enc_16w, crypto_kem_enc(ct, ss, pk),
-                  20000, 16);
+                  200000, 16);
     // crypto_kem_enc(ct, ss, pk);
 
     // FILE *f4 = fopen("test_kem_enc_ss.txt", "w+");
@@ -321,7 +321,7 @@ int main()
 
 #ifdef kem_dec_flag
     oper_second_n(while (0), crypto_kem_dec_16w, crypto_kem_dec(ss, ct, sk),
-                  20000, 16);
+                  200000, 16);
     // crypto_kem_dec(ss, ct, sk);
 
     // FILE *f5 = fopen("test_kem_dec_ss.txt", "w+");
