@@ -15,12 +15,12 @@
 #define NTESTS 100000
 // #define test_zone 1
 // #define all_function_test 1
-#define indcpa_keypair_flag 1
+// #define indcpa_keypair_flag 1
 // #define indcpa_enc_flag 1
 // #define indcpa_dec_flag 1
-// #define kem_keypair_flag 1
-// #define kem_enc_flag 1
-// #define kem_dec_flag 1
+#define kem_keypair_flag 1
+#define kem_enc_flag 1
+#define kem_dec_flag 1
 
 int main()
 {
@@ -139,27 +139,27 @@ int main()
 
 #ifdef indcpa_keypair_flag
 
-    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
-                  20000, 16);
+    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_keypair, indcpa_keypair(pk, sk),
+    //               20000, 16);
 
-    // FILE *f = fopen("test_indcpakeypair.txt", "w+");
+    FILE *f = fopen("test_indcpakeypair.txt", "w+");
    
-    // indcpa_keypair(pk, sk);
+    indcpa_keypair(pk, sk);
     // pk_formseq(pk, pkseq);
 
-    // for (int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES / 16; i++)
-    // {
-    //     for (int j = 0; j < 16; j++)
-    //     {
-    //         fprintf(f, "%7d", pk[i * 16 + j]);
-    //         // fprintf(f, "%7d", pkseq[i*16+j]);
-    //         // fprintf(f, "%7d", sk[i*16+j]);
-    //     }
-    //     // fprintf(f, "%7d%7d", pk[i], pk[i + 384]);
-    //     fputs("\n", f);
-    // }
+    for (int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES / 16; i++)
+    {
+        for (int j = 0; j < 16; j++)
+        {
+            fprintf(f, "%7d", pk[i * 16 + j]);
+            // fprintf(f, "%7d", pkseq[i*16+j]);
+            // fprintf(f, "%7d", sk[i*16+j]);
+        }
+        // fprintf(f, "%7d%7d", pk[i], pk[i + 384]);
+        fputs("\n", f);
+    }
 
-    // fclose(f);
+    fclose(f);
 
 #endif
 
@@ -167,28 +167,22 @@ int main()
     // for(i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES; i++) {
     //     pk[i] = 12;
     // }
-    // for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
-    // {
-    //     for (int j = 0; j < 32; j++)
-    //     {
-    //         m[i * 32 + j] = i;
-    //         // m[i*16+j] = 1;
-    //     }
-    // }
+    for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
+    {
+        for (int j = 0; j < 32; j++)
+        {
+            // m[i * 32 + j] = i;
+            m[i*32+j] = 1;
+        }
+    }
 
     // FILE *f1 = fopen("test_indcpaenc.txt", "w+");
-    // if (f1 == NULL)
-    // {
-    //     printf("Fail to open test_indcpaenc.txt!");
-    //     fclose(f1);
-    //     return -1;
-    // }
 
-    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_enc, indcpa_enc(c, m, pk, coins),
-                  20000, 16);
+    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_enc, indcpa_enc(c, m, pk, coins),
+    //               20000, 16);
 
     // indcpa_enc(c, m, pk, coins, pkpvprint, vprint);
-    // indcpa_enc(c, m, pk, coins);
+    indcpa_enc(c, m, pk, coins);
 
     // ct_formseq(c, ctseq);
 
@@ -230,18 +224,12 @@ int main()
     // int16_t bprint[KYBER_K*KYBER_N*16];
     // int16_t vprint[KYBER_N*16];
 
-    // FILE *f2 = fopen("test_indcpadec.txt", "w+");
-    // if (f2 == NULL)
-    // {
-    //     printf("Fail to open test_indcpadec.txt!");
-    //     fclose(f2);
-    //     return -1;
-    // }
+    FILE *f2 = fopen("test_indcpadec.txt", "w+");
 
-    oper_second_n(while (0), Kyber_AVX2_16w_indcpa_dec, indcpa_dec(m, c, sk),
-                  20000, 16);
+    // oper_second_n(while (0), Kyber_AVX2_16w_indcpa_dec, indcpa_dec(m, c, sk),
+    //               20000, 16);
 
-    // indcpa_dec(m, c, sk);
+    indcpa_dec(m, c, sk);
     // indcpa_dec(m, c, sk, vprint);
 
     // for(int i = 0; i < KYBER_POLYVECCOMPRESSEDBYTES/16; i++) {
@@ -271,16 +259,16 @@ int main()
     // }
     // free(bprint);
 
-    // for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
-    // {
-    //     for (int j = 0; j < 32; j++)
-    //     {
-    //         fprintf(f2, "%7d", m[i * 32 + j]);
-    //     }
-    //     fputs("\n", f2);
-    // }
+    for (int i = 0; i < KYBER_INDCPA_MSGBYTES; i++)
+    {
+        for (int j = 0; j < 32; j++)
+        {
+            fprintf(f2, "%7d", m[i * 32 + j]);
+        }
+        fputs("\n", f2);
+    }
 
-    // fclose(f2);
+    fclose(f2);
 #endif
 
 #ifdef kem_keypair_flag
@@ -288,16 +276,16 @@ int main()
                   20000, 16);
     // crypto_kem_keypair(pk, sk);
 
-    // FILE *f2 = fopen("test_kem_keypair_pk.txt", "w+");
+    // FILE *f3 = fopen("test_kem_keypair_pk.txt", "w+");
 
     // for(int i = 0; i < KYBER_PUBLICKEYBYTES/16; i++) {
     //     for(int j = 0; j < 16; j++) {
-    //         fprintf(f2, "%7d", pk[i*16+j]);
+    //         fprintf(f3, "%7d", pk[i*16+j]);
     //     }
-    //     fputs("\n", f2);
+    //     fputs("\n", f3);
     // }
 
-    // fclose(f2);
+    // fclose(f3);
 
     // FILE *f3 = fopen("test_kem_keypair_sk.txt", "w+");
 
