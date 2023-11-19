@@ -291,9 +291,9 @@ unsigned int rej_uniform_avx(int16_t * restrict r, const uint8_t *buf)
 
   ctr = pos = 0;
   while(ctr <= KYBER_N - 32 && pos <= REJ_UNIFORM_AVX_BUFLEN - 48) {   //REJ_UNIFORM_AVX_BUFLEN = 3*168
-    f0 = _mm256_loadu_si256((__m256i *)&buf[pos]);  //f0 = buf[31:0], 这里f0只存了24个数可能是因为后续只用到了24个数
-    f1 = _mm256_loadu_si256((__m256i *)&buf[pos+24]); //f1 = buf[56:24],这里数组内部全部左高右低表示，以适配avx2指令
-    //0x94 = 1001 0100
+    f0 = _mm256_loadu_si256((__m256i *)&buf[pos]);
+    f1 = _mm256_loadu_si256((__m256i *)&buf[pos+24]);
+
     f0 = _mm256_permute4x64_epi64(f0, 0x94);
     f1 = _mm256_permute4x64_epi64(f1, 0x94);
     f0 = _mm256_shuffle_epi8(f0, idx8);

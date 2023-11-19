@@ -380,7 +380,7 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32*(2*16-1)], int transposed)
     ctr3 = rej_uniform_avx(a[2].vec[1].coeffs + i*KYBER_N, buf[3].coeffs);
 
     while(ctr0 < KYBER_N || ctr1 < KYBER_N || ctr2 < KYBER_N || ctr3 < KYBER_N) {
-      shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 16, &state);
+      shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 1, &state);
 
       ctr0 += rej_uniform(a[1].vec[1].coeffs + i*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE);
       ctr1 += rej_uniform(a[1].vec[2].coeffs + i*KYBER_N + ctr1, KYBER_N - ctr1, buf[1].coeffs, SHAKE128_RATE);
@@ -396,7 +396,7 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32*(2*16-1)], int transposed)
     shake128_squeezeblocks(buf[0].coeffs, REJ_UNIFORM_AVX_NBLOCKS, &state1x);
     ctr0 = rej_uniform_avx(a[2].vec[2].coeffs + i*KYBER_N, buf[0].coeffs);
     while(ctr0 < KYBER_N) {
-      shake128_squeezeblocks(buf[0].coeffs, 16, &state1x);
+      shake128_squeezeblocks(buf[0].coeffs, 1, &state1x);
       ctr0 += rej_uniform(a[2].vec[2].coeffs + i*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE);
     }
 
@@ -482,20 +482,19 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   for(int i = 0; i < 4; i++) {
     hash_gx4(buf+8*i*KYBER_SYMBYTES, buf+(8*i+2)*KYBER_SYMBYTES, buf+(8*i+4)*KYBER_SYMBYTES, buf+(8*i+6)*KYBER_SYMBYTES, buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*i*4, buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+1), buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+2), buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+3), KYBER_SYMBYTES);
   }
-  // hash_g(buf, buf, KYBER_SYMBYTES);
 
   // for (i = 0; i < KYBER_K; i++) {
   //   for (j = 0; j < KYBER_K; j++) {
   //     for(k = 0; k < KYBER_N; k++){
   //       for(p = 0; p < 16; p++) {
-  //         a[i].vec[j].coeffs[k*16+p] = 1;
+  //         a[i].vec[j].coeffs[k*16+p] = 21;
   //       }
   //     }
   //   }
   // }
 
   // for(int i = 0; i < 2*KYBER_SYMBYTES*16; i++) {
-  //   buf[i] = 1;
+  //   buf[i] = 7;
   // }
 
   gen_a(a, publicseed);  
@@ -526,8 +525,8 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   // for (j = 0; j < KYBER_K; j++) {
   //   for(k = 0; k < 256; k++) {
   //     for(p = 0; p < 16; p++) {
-  //       skpv.vec[j].coeffs[k*16+p] = 19;
-  //       e.vec[j].coeffs[k*16+p] = 19;
+  //       skpv.vec[j].coeffs[k*16+p] = 21;
+  //       e.vec[j].coeffs[k*16+p] = 21;
   //     }
   //   }
   // }
@@ -554,8 +553,8 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_add(&pkpvseq, &pkpvseq, &eseq);
   polyvec_reduce(&pkpvseq);
 
-  // polyvec_formseqfrom16(&pkpvseq, &pkpv);
-  // polyvec_formseqfrom16(&skpvseq, &skpv);
+  // polyvec_formseqfrom16(&pkpvseq, &pkpv);  //useless
+  // polyvec_formseqfrom16(&skpvseq, &skpv);  //useless
 
   pack_sk(skseq, &skpvseq);
   pack_pk(pkseq, &pkpvseq);
@@ -595,16 +594,12 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   //   }
   // }
 
-  // for(int i = 0; i < 3*384*16; i++) {
-  //   pk[i] = pkseq[i];
-  // }
-  // free(pkseq);
-
   memcpy(seed, pk+KYBER_POLYVECBYTES*16, KYBER_SYMBYTES*16*2);
 
   keypair_formseqto16(pk, tpk, pkseq);
   unpack_pk(&pkpvseq, pkseq);
-  // polyvec_formseqto16(&pkpv, &pkpvseq);
+
+  // polyvec_formseqto16(&pkpv, &pkpvseq);  //useless
 
   msg_formseqto16(m, mseq);
   poly_frommsg_16(&k, mseq);
@@ -613,7 +608,7 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   //   for (j = 0; j < KYBER_K; j++) {
   //     for(p = 0; p < KYBER_N; p++) {
   //       for(l = 0; l < 16; l++) {
-  //         at[i].vec[j].coeffs[p*16+l] = 1;
+  //         at[i].vec[j].coeffs[p*16+l] = 21;
   //       }
   //     }
   //   }
@@ -650,9 +645,9 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   // for (j = 0; j < KYBER_K; j++) {
   //   for(l = 0; l < KYBER_N; l++) {
   //     for(p = 0; p < 16; p++) {
-  //       sp.vec[j].coeffs[l*16+p] = 19;
-  //       ep.vec[j].coeffs[l*16+p] = 19;
-  //       epp.coeffs[l*16+p] = 19;
+  //       sp.vec[j].coeffs[l*16+p] = 21;
+  //       ep.vec[j].coeffs[l*16+p] = 21;
+  //       epp.coeffs[l*16+p] = 21;
   //     }
   //   }
   // }
@@ -737,7 +732,8 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*32],
 
   keypair_formseqto16(sk, tsk, skseq);
   unpack_sk(&skpvseq, skseq);
-  // polyvec_formseqto16(&skpv, &skpvseq);
+
+  // polyvec_formseqto16(&skpv, &skpvseq);  //useless
 
   polyvec_ntt(&b);
   polyvec_basemul_acc_montgomery(&mp, &skpvseq, &b);
