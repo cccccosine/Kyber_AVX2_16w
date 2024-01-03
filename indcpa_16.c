@@ -296,110 +296,259 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32*(2*16-1)], int transposed)
   unsigned int ctr0, ctr1, ctr2, ctr3;
   ALIGNED_UINT8(REJ_UNIFORM_AVX_NBLOCKS*SHAKE128_RATE) buf[4];   //3*168
   __m256i f;
+  __m256i f0, f1, f2, f3;
   keccakx4_state state;
   keccak_state state1x;
 
-  for(int i = 0; i < 16; i++) {
-    f = _mm256_loadu_si256((__m256i *)(seed+i*32*2)); 
-    _mm256_store_si256(buf[0].vec, f);
-    _mm256_store_si256(buf[1].vec, f);
-    _mm256_store_si256(buf[2].vec, f);
-    _mm256_store_si256(buf[3].vec, f);
+  // for(int i = 0; i < 16; i++) {
+  //   f = _mm256_loadu_si256((__m256i *)(seed+i*32*2)); 
+  //   _mm256_store_si256(buf[0].vec, f);
+  //   _mm256_store_si256(buf[1].vec, f);
+  //   _mm256_store_si256(buf[2].vec, f);
+  //   _mm256_store_si256(buf[3].vec, f);
 
-    if(transposed) {
-      buf[0].coeffs[32] = 0;
-      buf[0].coeffs[33] = 0;
-      buf[1].coeffs[32] = 0;
-      buf[1].coeffs[33] = 1;
-      buf[2].coeffs[32] = 0;
-      buf[2].coeffs[33] = 2;
-      buf[3].coeffs[32] = 1;
-      buf[3].coeffs[33] = 0;
+  //   if(transposed) {
+  //     buf[0].coeffs[32] = 0;
+  //     buf[0].coeffs[33] = 0;
+  //     buf[1].coeffs[32] = 0;
+  //     buf[1].coeffs[33] = 1;
+  //     buf[2].coeffs[32] = 0;
+  //     buf[2].coeffs[33] = 2;
+  //     buf[3].coeffs[32] = 1;
+  //     buf[3].coeffs[33] = 0;
+  //   }
+  //   else {
+  //     buf[0].coeffs[32] = 0;
+  //     buf[0].coeffs[33] = 0;
+  //     buf[1].coeffs[32] = 1;
+  //     buf[1].coeffs[33] = 0;
+  //     buf[2].coeffs[32] = 2;
+  //     buf[2].coeffs[33] = 0;
+  //     buf[3].coeffs[32] = 0;
+  //     buf[3].coeffs[33] = 1;
+  //   }
+
+  //   shake128x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 34);
+  //   shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, REJ_UNIFORM_AVX_NBLOCKS, &state);
+
+  //   ctr0 = rej_uniform_avx(a[0].vec[0].coeffs + i*KYBER_N, buf[0].coeffs);
+  //   ctr1 = rej_uniform_avx(a[0].vec[1].coeffs + i*KYBER_N, buf[1].coeffs);
+  //   ctr2 = rej_uniform_avx(a[0].vec[2].coeffs + i*KYBER_N, buf[2].coeffs);
+  //   ctr3 = rej_uniform_avx(a[1].vec[0].coeffs + i*KYBER_N, buf[3].coeffs);
+
+  //   while(ctr0 < KYBER_N || ctr1 < KYBER_N || ctr2 < KYBER_N || ctr3 < KYBER_N) {
+  //     shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 1, &state);  
+
+  //     ctr0 += rej_uniform(a[0].vec[0].coeffs + i*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE);
+  //     ctr1 += rej_uniform(a[0].vec[1].coeffs + i*KYBER_N + ctr1, KYBER_N - ctr1, buf[1].coeffs, SHAKE128_RATE);
+  //     ctr2 += rej_uniform(a[0].vec[2].coeffs + i*KYBER_N + ctr2, KYBER_N - ctr2, buf[2].coeffs, SHAKE128_RATE);
+  //     ctr3 += rej_uniform(a[1].vec[0].coeffs + i*KYBER_N + ctr3, KYBER_N - ctr3, buf[3].coeffs, SHAKE128_RATE);
+  //   }
+
+  //   f = _mm256_loadu_si256((__m256i *)(seed+i*32*2));
+  //   _mm256_store_si256(buf[0].vec, f);
+  //   _mm256_store_si256(buf[1].vec, f);
+  //   _mm256_store_si256(buf[2].vec, f);
+  //   _mm256_store_si256(buf[3].vec, f);
+
+  //   if(transposed) {
+  //     buf[0].coeffs[32] = 1;
+  //     buf[0].coeffs[33] = 1;
+  //     buf[1].coeffs[32] = 1;
+  //     buf[1].coeffs[33] = 2;
+  //     buf[2].coeffs[32] = 2;
+  //     buf[2].coeffs[33] = 0;
+  //     buf[3].coeffs[32] = 2;
+  //     buf[3].coeffs[33] = 1;
+  //   }
+  //   else {
+  //     buf[0].coeffs[32] = 1;
+  //     buf[0].coeffs[33] = 1;
+  //     buf[1].coeffs[32] = 2;
+  //     buf[1].coeffs[33] = 1;
+  //     buf[2].coeffs[32] = 0;
+  //     buf[2].coeffs[33] = 2;
+  //     buf[3].coeffs[32] = 1;
+  //     buf[3].coeffs[33] = 2;
+  //   }
+
+  //   shake128x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 34);
+  //   shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, REJ_UNIFORM_AVX_NBLOCKS, &state);
+
+  //   ctr0 = rej_uniform_avx(a[1].vec[1].coeffs + i*KYBER_N, buf[0].coeffs);
+  //   ctr1 = rej_uniform_avx(a[1].vec[2].coeffs + i*KYBER_N, buf[1].coeffs);
+  //   ctr2 = rej_uniform_avx(a[2].vec[0].coeffs + i*KYBER_N, buf[2].coeffs);
+  //   ctr3 = rej_uniform_avx(a[2].vec[1].coeffs + i*KYBER_N, buf[3].coeffs);
+
+  //   while(ctr0 < KYBER_N || ctr1 < KYBER_N || ctr2 < KYBER_N || ctr3 < KYBER_N) {
+  //     shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 1, &state);
+
+  //     ctr0 += rej_uniform(a[1].vec[1].coeffs + i*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE);
+  //     ctr1 += rej_uniform(a[1].vec[2].coeffs + i*KYBER_N + ctr1, KYBER_N - ctr1, buf[1].coeffs, SHAKE128_RATE);
+  //     ctr2 += rej_uniform(a[2].vec[0].coeffs + i*KYBER_N + ctr2, KYBER_N - ctr2, buf[2].coeffs, SHAKE128_RATE);
+  //     ctr3 += rej_uniform(a[2].vec[1].coeffs + i*KYBER_N + ctr3, KYBER_N - ctr3, buf[3].coeffs, SHAKE128_RATE);
+  //   }
+
+  //   f = _mm256_loadu_si256((__m256i *)(seed+i*32*2));
+  //   _mm256_store_si256(buf[0].vec, f);
+  //   buf[0].coeffs[32] = 2;
+  //   buf[0].coeffs[33] = 2;
+  //   shake128_absorb_once(&state1x, buf[0].coeffs, 34);
+  //   shake128_squeezeblocks(buf[0].coeffs, REJ_UNIFORM_AVX_NBLOCKS, &state1x);
+  //   ctr0 = rej_uniform_avx(a[2].vec[2].coeffs + i*KYBER_N, buf[0].coeffs);
+  //   while(ctr0 < KYBER_N) {
+  //     shake128_squeezeblocks(buf[0].coeffs, 1, &state1x);
+  //     ctr0 += rej_uniform(a[2].vec[2].coeffs + i*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE);
+  //   }
+
+  // }
+
+  for(int i = 0; i < 9; i++) {
+    for(int j = 0; j < 4; j++) {
+      f0 = _mm256_loadu_si256((__m256i *)(seed+(j*4+0)*32*2));
+      f1 = _mm256_loadu_si256((__m256i *)(seed+(j*4+1)*32*2));
+      f2 = _mm256_loadu_si256((__m256i *)(seed+(j*4+2)*32*2));
+      f3 = _mm256_loadu_si256((__m256i *)(seed+(j*4+3)*32*2));
+
+      _mm256_store_si256(buf[0].vec, f0);
+      _mm256_store_si256(buf[1].vec, f1);
+      _mm256_store_si256(buf[2].vec, f2);
+      _mm256_store_si256(buf[3].vec, f3);
+
+      switch (i)
+      {
+      case 0:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 0;
+            buf[k].coeffs[33] = 0;
+          }
+          else {
+            buf[k].coeffs[32] = 0;
+            buf[k].coeffs[33] = 0;
+          }
+        }
+        break;
+      case 1:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 0;
+            buf[k].coeffs[33] = 1;
+          }
+          else {
+            buf[k].coeffs[32] = 1;
+            buf[k].coeffs[33] = 0;
+          }
+        }
+        break;
+      case 2:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 0;
+            buf[k].coeffs[33] = 2;
+          }
+          else {
+            buf[k].coeffs[32] = 2;
+            buf[k].coeffs[33] = 0;
+          }
+        }
+        break;
+      case 3:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 1;
+            buf[k].coeffs[33] = 0;
+          }
+          else {
+            buf[k].coeffs[32] = 0;
+            buf[k].coeffs[33] = 1;
+          }
+        }
+        break;
+      case 4:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 1;
+            buf[k].coeffs[33] = 1;
+          }
+          else {
+            buf[k].coeffs[32] = 1;
+            buf[k].coeffs[33] = 1;
+          }
+        }
+        break;
+      case 5:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 1;
+            buf[k].coeffs[33] = 2;
+          }
+          else {
+            buf[k].coeffs[32] = 2;
+            buf[k].coeffs[33] = 1;
+          }
+        }
+        break;
+      case 6:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 2;
+            buf[k].coeffs[33] = 0;
+          }
+          else {
+            buf[k].coeffs[32] = 0;
+            buf[k].coeffs[33] = 2;
+          }
+        }
+        break;
+      case 7:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 2;
+            buf[k].coeffs[33] = 1;
+          }
+          else {
+            buf[k].coeffs[32] = 1;
+            buf[k].coeffs[33] = 2;
+          }
+        }
+        break;
+      case 8:
+        for(int k = 0; k < 4; k++) {
+          if(transposed) {
+            buf[k].coeffs[32] = 2;
+            buf[k].coeffs[33] = 2;
+          }
+          else {
+            buf[k].coeffs[32] = 2;
+            buf[k].coeffs[33] = 2;
+          }
+        }
+        break;
+      default:
+        printf("The i in loop is invalid!");
+        break;
+      }
+
+      shake128x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 34);
+      shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, REJ_UNIFORM_AVX_NBLOCKS, &state);
+
+      ctr0 = rej_uniform_avx(a[i/3].vec[i%3].coeffs + (j*4+0)*KYBER_N, buf[0].coeffs); 
+      ctr1 = rej_uniform_avx(a[i/3].vec[i%3].coeffs + (j*4+1)*KYBER_N, buf[1].coeffs); 
+      ctr2 = rej_uniform_avx(a[i/3].vec[i%3].coeffs + (j*4+2)*KYBER_N, buf[2].coeffs); 
+      ctr3 = rej_uniform_avx(a[i/3].vec[i%3].coeffs + (j*4+3)*KYBER_N, buf[3].coeffs); 
+
+      while (ctr0 < KYBER_N || ctr1 < KYBER_N || ctr2 < KYBER_N || ctr3 < KYBER_N)
+      {
+        shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 1, &state); 
+
+        ctr0 += rej_uniform(a[i/3].vec[i%3].coeffs + (j*4+0)*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE); 
+        ctr1 += rej_uniform(a[i/3].vec[i%3].coeffs + (j*4+1)*KYBER_N + ctr1, KYBER_N - ctr1, buf[1].coeffs, SHAKE128_RATE); 
+        ctr2 += rej_uniform(a[i/3].vec[i%3].coeffs + (j*4+2)*KYBER_N + ctr2, KYBER_N - ctr2, buf[2].coeffs, SHAKE128_RATE); 
+        ctr3 += rej_uniform(a[i/3].vec[i%3].coeffs + (j*4+3)*KYBER_N + ctr3, KYBER_N - ctr3, buf[3].coeffs, SHAKE128_RATE); 
+
+      }
     }
-    else {
-      buf[0].coeffs[32] = 0;
-      buf[0].coeffs[33] = 0;
-      buf[1].coeffs[32] = 1;
-      buf[1].coeffs[33] = 0;
-      buf[2].coeffs[32] = 2;
-      buf[2].coeffs[33] = 0;
-      buf[3].coeffs[32] = 0;
-      buf[3].coeffs[33] = 1;
-    }
-
-    shake128x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 34);
-    shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, REJ_UNIFORM_AVX_NBLOCKS, &state);
-
-    ctr0 = rej_uniform_avx(a[0].vec[0].coeffs + i*KYBER_N, buf[0].coeffs);  //对rej的16w修改不确定
-    ctr1 = rej_uniform_avx(a[0].vec[1].coeffs + i*KYBER_N, buf[1].coeffs);
-    ctr2 = rej_uniform_avx(a[0].vec[2].coeffs + i*KYBER_N, buf[2].coeffs);
-    ctr3 = rej_uniform_avx(a[1].vec[0].coeffs + i*KYBER_N, buf[3].coeffs);
-
-    while(ctr0 < KYBER_N || ctr1 < KYBER_N || ctr2 < KYBER_N || ctr3 < KYBER_N) {
-      shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 1, &state);  
-
-      ctr0 += rej_uniform(a[0].vec[0].coeffs + i*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE);
-      ctr1 += rej_uniform(a[0].vec[1].coeffs + i*KYBER_N + ctr1, KYBER_N - ctr1, buf[1].coeffs, SHAKE128_RATE);
-      ctr2 += rej_uniform(a[0].vec[2].coeffs + i*KYBER_N + ctr2, KYBER_N - ctr2, buf[2].coeffs, SHAKE128_RATE);
-      ctr3 += rej_uniform(a[1].vec[0].coeffs + i*KYBER_N + ctr3, KYBER_N - ctr3, buf[3].coeffs, SHAKE128_RATE);
-    }
-
-    f = _mm256_loadu_si256((__m256i *)(seed+i*32*2));
-    _mm256_store_si256(buf[0].vec, f);
-    _mm256_store_si256(buf[1].vec, f);
-    _mm256_store_si256(buf[2].vec, f);
-    _mm256_store_si256(buf[3].vec, f);
-
-    if(transposed) {
-      buf[0].coeffs[32] = 1;
-      buf[0].coeffs[33] = 1;
-      buf[1].coeffs[32] = 1;
-      buf[1].coeffs[33] = 2;
-      buf[2].coeffs[32] = 2;
-      buf[2].coeffs[33] = 0;
-      buf[3].coeffs[32] = 2;
-      buf[3].coeffs[33] = 1;
-    }
-    else {
-      buf[0].coeffs[32] = 1;
-      buf[0].coeffs[33] = 1;
-      buf[1].coeffs[32] = 2;
-      buf[1].coeffs[33] = 1;
-      buf[2].coeffs[32] = 0;
-      buf[2].coeffs[33] = 2;
-      buf[3].coeffs[32] = 1;
-      buf[3].coeffs[33] = 2;
-    }
-
-    shake128x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 34);
-    shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, REJ_UNIFORM_AVX_NBLOCKS, &state);
-
-    ctr0 = rej_uniform_avx(a[1].vec[1].coeffs + i*KYBER_N, buf[0].coeffs);
-    ctr1 = rej_uniform_avx(a[1].vec[2].coeffs + i*KYBER_N, buf[1].coeffs);
-    ctr2 = rej_uniform_avx(a[2].vec[0].coeffs + i*KYBER_N, buf[2].coeffs);
-    ctr3 = rej_uniform_avx(a[2].vec[1].coeffs + i*KYBER_N, buf[3].coeffs);
-
-    while(ctr0 < KYBER_N || ctr1 < KYBER_N || ctr2 < KYBER_N || ctr3 < KYBER_N) {
-      shake128x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 1, &state);
-
-      ctr0 += rej_uniform(a[1].vec[1].coeffs + i*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE);
-      ctr1 += rej_uniform(a[1].vec[2].coeffs + i*KYBER_N + ctr1, KYBER_N - ctr1, buf[1].coeffs, SHAKE128_RATE);
-      ctr2 += rej_uniform(a[2].vec[0].coeffs + i*KYBER_N + ctr2, KYBER_N - ctr2, buf[2].coeffs, SHAKE128_RATE);
-      ctr3 += rej_uniform(a[2].vec[1].coeffs + i*KYBER_N + ctr3, KYBER_N - ctr3, buf[3].coeffs, SHAKE128_RATE);
-    }
-
-    f = _mm256_loadu_si256((__m256i *)(seed+i*32*2));
-    _mm256_store_si256(buf[0].vec, f);
-    buf[0].coeffs[32] = 2;
-    buf[0].coeffs[33] = 2;
-    shake128_absorb_once(&state1x, buf[0].coeffs, 34);
-    shake128_squeezeblocks(buf[0].coeffs, REJ_UNIFORM_AVX_NBLOCKS, &state1x);
-    ctr0 = rej_uniform_avx(a[2].vec[2].coeffs + i*KYBER_N, buf[0].coeffs);
-    while(ctr0 < KYBER_N) {
-      shake128_squeezeblocks(buf[0].coeffs, 1, &state1x);
-      ctr0 += rej_uniform(a[2].vec[2].coeffs + i*KYBER_N + ctr0, KYBER_N - ctr0, buf[0].coeffs, SHAKE128_RATE);
-    }
-
   }
 
 }
@@ -467,7 +616,9 @@ void gen_matrix(polyvec *a, const uint8_t seed[32], int transposed)
 
 
 void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],     
-                    uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES])
+                    uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]
+                    // uint16_t pkpvprint[KYBER_INDCPA_PUBLICKEYBYTES]
+                    )
 {
   unsigned int i, j, k, p;
   uint8_t buf[2*KYBER_SYMBYTES*16];// pkseq[KYBER_INDCPA_PUBLICKEYBYTES], skseq[KYBER_INDCPA_SECRETKEYBYTES], tkp[KYBER_INDCPA_PUBLICKEYBYTES];
@@ -487,14 +638,14 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   //   for (j = 0; j < KYBER_K; j++) {
   //     for(k = 0; k < KYBER_N; k++){
   //       for(p = 0; p < 16; p++) {
-  //         a[i].vec[j].coeffs[k*16+p] = 21;
+  //         a[i].vec[j].coeffs[k*16+p] = 19;
   //       }
   //     }
   //   }
   // }
 
   // for(int i = 0; i < 2*KYBER_SYMBYTES*16; i++) {
-  //   buf[i] = 7;
+  //   buf[i] = 1;
   // }
 
   gen_a(a, publicseed);  
@@ -525,8 +676,8 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   // for (j = 0; j < KYBER_K; j++) {
   //   for(k = 0; k < 256; k++) {
   //     for(p = 0; p < 16; p++) {
-  //       skpv.vec[j].coeffs[k*16+p] = 21;
-  //       e.vec[j].coeffs[k*16+p] = 21;
+  //       skpv.vec[j].coeffs[k*16+p] = 19;
+  //       e.vec[j].coeffs[k*16+p] = 19;
   //     }
   //   }
   // }
@@ -562,6 +713,22 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   keypair_formseqfrom16(pkseq, tkp, pk);
 
   memcpy(pk+KYBER_POLYVECBYTES*16, publicseed, KYBER_SYMBYTES*16*2);
+
+  // for(i = 0; i < KYBER_K; i++) {
+  //   // for(j = 0; j < KYBER_N; j++) {
+  //   for(j = 0; j < 384; j++) {
+  //     for(k = 0; k < 16; k++) {
+  //       // skpvprint[i*KYBER_N+j] = skpv.vec[i].coeffs[j];
+  //       // pkpvprint[(i*KYBER_N+j)*16+k] = skpvseq.vec[i].coeffs[j*16+k];
+  //       // pkpvprint[(i*KYBER_N+j)*16+k] = pkpvseq.vec[i].coeffs[j*16+k];
+  //       // pkpvprint[(i*384+j)*16+k] = sk[(i*384+j)*16+k];
+  //       pkpvprint[(i*384+j)*16+k] = pk[(i*384+j)*16+k];
+  //       // pkpvprint[i*KYBER_N+j] = e.vec[i].coeffs[j];
+  //       // pkpvprint[i*KYBER_N+j] = a[1].vec[i].coeffs[j];
+  //     }
+  //   }
+  // }
+
 
   free(pkseq);
   free(skseq);
@@ -608,7 +775,7 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   //   for (j = 0; j < KYBER_K; j++) {
   //     for(p = 0; p < KYBER_N; p++) {
   //       for(l = 0; l < 16; l++) {
-  //         at[i].vec[j].coeffs[p*16+l] = 21;
+  //         at[i].vec[j].coeffs[p*16+l] = 19;
   //       }
   //     }
   //   }
