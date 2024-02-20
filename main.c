@@ -14,13 +14,13 @@
 
 #define NTESTS 100000
 // #define test_zone 1
-// #define all_function_test 1
-// #define indcpa_keypair_flag 1
-// #define indcpa_enc_flag 1
+#define all_function_test 1
+#define indcpa_keypair_flag 1
+#define indcpa_enc_flag 1
 #define indcpa_dec_flag 1
-// #define kem_keypair_flag 1
-// #define kem_enc_flag 1
-// #define kem_dec_flag 1
+#define kem_keypair_flag 1
+#define kem_enc_flag 1
+#define kem_dec_flag 1
 
 int main()
 {
@@ -120,19 +120,19 @@ int main()
     polyvec_16 a[KYBER_K], skpv, e, pkpv, b;
     poly_16 v, k, epp, mp;
 
-    // oper_second_n(while (0), poly_basemul_montgomery, poly_basemul_montgomery(&v,&k,&epp),
-    //               200000, 16);
+    oper_second_n(while (0), poly_basemul_montgomery, poly_basemul_montgomery(&v,&k,&epp),
+                  200000, 16);
 
     // oper_second_n(while (0), randombytes, randombytes(buf, KYBER_SYMBYTES),
     //               200000, 1);
     // oper_second_n(while (0), hash_g, hash_g(buf, buf, KYBER_SYMBYTES),
     //               200000, 1);
-    oper_second_n(while (0), gen_a, gen_a(a, publicseed),
-                  200000, 16);
+    // oper_second_n(while (0), gen_a, gen_a(a, publicseed),
+    //               200000, 16);
     // oper_second_n(while (0), poly_getnoise_eta1_4x, poly_getnoise_eta1_4x(skpv.vec + 0, skpv.vec + 1, skpv.vec + 2, e.vec + 0, noiseseed, 0, 1, 2, 3),
     //               200000, 16);
-    // oper_second_n(while (0), polyvec_ntt_16w, polyvec_ntt(&skpv),
-    //               200000, 16);
+    oper_second_n(while (0), polyvec_ntt_16w, polyvec_ntt(&skpv),
+                  200000, 16);
     // oper_second_n(while (0), polyvec_reduce, polyvec_reduce(&skpv),
     //               200000, 16);
     // oper_second_n(while (0), polyvec_basemul_acc_montgomery_16w, polyvec_basemul_acc_montgomery(&pkpv.vec[0], &a[0], &skpv),
@@ -150,8 +150,8 @@ int main()
     //               200000, 16);
     // oper_second_n(while (0), poly_frommsg_16, poly_frommsg_16(&k, m),
     //               200000, 16);
-    // oper_second_n(while (0), polyvec_invntt_tomont_16w, polyvec_invntt_tomont(&b),
-    //               200000, 16);
+    oper_second_n(while (0), polyvec_invntt_tomont_16w, polyvec_invntt_tomont(&b),
+                  200000, 16);
     // oper_second_n(while (0), pack_ciphertext, pack_ciphertext(c, &b, &v),
     //               200000, 16);
     // oper_second_n(while (0), unpack_ciphertext, unpack_ciphertext(&b, &v, c),

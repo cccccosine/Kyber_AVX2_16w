@@ -15,7 +15,7 @@
 // #define test_kem_dec_flag 1
 
 //16个单独pk需要变成(packed pk)+publicseed的形式才可进行unpack操作
-void pk_separate16(uint8_t *pk, uint8_t *pk_sepa_16) {
+void pk_separate16(uint8_t *pk, uint8_t *pk_sepa_16) {   //此函数未按照KYBER_K进行修改
   for(int i = 0; i < 16; i++) {
     for(int j = 0; j < 3*384; j++) {
       pk_sepa_16[j+i*(3*384+64)] = pk[j+i*3*384];
@@ -110,6 +110,7 @@ int crypto_kem_enc(uint8_t *ct,
   }
 
   /* Multitarget countermeasure for coins + contributory KEM */
+  //下一行函数未进行参数集扩展修改
   pk_separate16(pk, pk_sepa_16);  //这一步将kem_keypair产生的pk分离成每一路都是polyvec+publicseed的正常格式
   for(int i = 0; i < 4; i++) {
     hash_hx4(buf+(8*i+1)*KYBER_SYMBYTES, buf+(8*i+3)*KYBER_SYMBYTES, buf+(8*i+5)*KYBER_SYMBYTES, buf+(8*i+7)*KYBER_SYMBYTES, pk_sepa_16+KYBER_PUBLICKEYBYTES/16*i*4, pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+1), pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+2), pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+3), KYBER_PUBLICKEYBYTES/16-KYBER_SYMBYTES);

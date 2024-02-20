@@ -2,7 +2,7 @@
 #define PARAMS_16_H
 
 #ifndef KYBER_K
-#define KYBER_K 3	/* Change this for different security strengths */
+#define KYBER_K 4	/* Change this for different security strengths */
 #endif
 
 //#define KYBER_90S	/* Uncomment this if you want the 90S variant */
@@ -41,16 +41,16 @@
 
 #if KYBER_K == 2
 #define KYBER_ETA1 3
-#define KYBER_POLYCOMPRESSEDBYTES    128
-#define KYBER_POLYVECCOMPRESSEDBYTES (KYBER_K * 320)
+#define KYBER_POLYCOMPRESSEDBYTES    128 * 16
+#define KYBER_POLYVECCOMPRESSEDBYTES (KYBER_K * 320 * 16)
 #elif KYBER_K == 3
 #define KYBER_ETA1 2
 #define KYBER_POLYCOMPRESSEDBYTES    128 * 16
 #define KYBER_POLYVECCOMPRESSEDBYTES (KYBER_K * 320 * 16)  //3*320*16
 #elif KYBER_K == 4
 #define KYBER_ETA1 2
-#define KYBER_POLYCOMPRESSEDBYTES    160
-#define KYBER_POLYVECCOMPRESSEDBYTES (KYBER_K * 352)
+#define KYBER_POLYCOMPRESSEDBYTES    160 * 16
+#define KYBER_POLYVECCOMPRESSEDBYTES (KYBER_K * 352 * 16)
 #endif
 
 #define KYBER_ETA2 2

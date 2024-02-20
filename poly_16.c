@@ -157,70 +157,260 @@ void poly_decompress(poly_16 *restrict r, const uint8_t a[128 * 16])
   }
 }
 
-#elif (KYBER_POLYCOMPRESSEDBYTES == 160)
-void poly_compress(uint8_t r[160], const poly *restrict a)
+#elif (KYBER_POLYCOMPRESSEDBYTES == 160 * 16)
+void poly_compress(uint8_t r[160 * 16], const poly_16 *restrict a)
 {
   unsigned int i;
-  __m256i f0, f1;
-  __m128i t0, t1;
-  const __m256i v = _mm256_load_si256(&qdata.vec[_16XV / 16]);
+  __m256i g, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15;
+  // __m128i t0, t1;
+  const __m256i v = _mm256_load_si256(&qdata_16.vec[_16XV_16 / 16]);
   const __m256i shift1 = _mm256_set1_epi16(1 << 10);
   const __m256i mask = _mm256_set1_epi16(31);
-  const __m256i shift2 = _mm256_set1_epi16((32 << 8) + 1);
-  const __m256i shift3 = _mm256_set1_epi32((1024 << 16) + 1);
-  const __m256i sllvdidx = _mm256_set1_epi64x(12);
-  const __m256i shufbidx = _mm256_set_epi8(8, -1, -1, -1, -1, -1, 4, 3, 2, 1, 0, -1, 12, 11, 10, 9,
-                                           -1, 12, 11, 10, 9, 8, -1, -1, -1, -1, -1, 4, 3, 2, 1, 0);
+  // const __m256i shift2 = _mm256_set1_epi16((32 << 8) + 1);
+  // const __m256i shift3 = _mm256_set1_epi32((1024 << 16) + 1);
+  // const __m256i sllvdidx = _mm256_set1_epi64x(12);
+  // const __m256i shufbidx = _mm256_set_epi8(8, -1, -1, -1, -1, -1, 4, 3, 2, 1, 0, -1, 12, 11, 10, 9,
+  //                                          -1, 12, 11, 10, 9, 8, -1, -1, -1, -1, -1, 4, 3, 2, 1, 0);
 
-  for (i = 0; i < KYBER_N / 32; i++)
-  {
-    f0 = _mm256_load_si256(&a->vec[2 * i + 0]);
-    f1 = _mm256_load_si256(&a->vec[2 * i + 1]);
+  // for (i = 0; i < KYBER_N / 32; i++)
+  // {
+  //   f0 = _mm256_load_si256(&a->vec[2 * i + 0]);
+  //   f1 = _mm256_load_si256(&a->vec[2 * i + 1]);
+  //   f0 = _mm256_mulhi_epi16(f0, v);
+  //   f1 = _mm256_mulhi_epi16(f1, v);
+  //   f0 = _mm256_mulhrs_epi16(f0, shift1);
+  //   f1 = _mm256_mulhrs_epi16(f1, shift1);
+  //   f0 = _mm256_and_si256(f0, mask);
+  //   f1 = _mm256_and_si256(f1, mask);
+  //   f0 = _mm256_packus_epi16(f0, f1);
+  //   f0 = _mm256_maddubs_epi16(f0, shift2); // a0 a1 a2 a3 b0 b1 b2 b3 a4 a5 a6 a7 b4 b5 b6 b7
+  //   f0 = _mm256_madd_epi16(f0, shift3);    // a0 a1 b0 b1 a2 a3 b2 b3
+  //   f0 = _mm256_sllv_epi32(f0, sllvdidx);
+  //   f0 = _mm256_srlv_epi64(f0, sllvdidx);
+  //   f0 = _mm256_shuffle_epi8(f0, shufbidx);
+  //   t0 = _mm256_castsi256_si128(f0);
+  //   t1 = _mm256_extracti128_si256(f0, 1);
+  //   t0 = _mm_blendv_epi8(t0, t1, _mm256_castsi256_si128(shufbidx));
+  //   _mm_storeu_si128((__m128i *)&r[20 * i + 0], t0);
+  //   memcpy(&r[20 * i + 16], &t1, 4);
+  // }
+
+  for (i = 0; i < KYBER_N / 16; i++) {
+    f0 = _mm256_load_si256(&a->vec[16 * i + 0]);
+    f1 = _mm256_load_si256(&a->vec[16 * i + 1]);
+    f2 = _mm256_load_si256(&a->vec[16 * i + 2]);
+    f3 = _mm256_load_si256(&a->vec[16 * i + 3]);
+    f4 = _mm256_load_si256(&a->vec[16 * i + 4]);
+    f5 = _mm256_load_si256(&a->vec[16 * i + 5]);
+    f6 = _mm256_load_si256(&a->vec[16 * i + 6]);
+    f7 = _mm256_load_si256(&a->vec[16 * i + 7]);
+    f8 = _mm256_load_si256(&a->vec[16 * i + 8]);
+    f9 = _mm256_load_si256(&a->vec[16 * i + 9]);
+    f10 = _mm256_load_si256(&a->vec[16 * i + 10]);
+    f11 = _mm256_load_si256(&a->vec[16 * i + 11]);
+    f12 = _mm256_load_si256(&a->vec[16 * i + 12]);
+    f13 = _mm256_load_si256(&a->vec[16 * i + 13]);
+    f14 = _mm256_load_si256(&a->vec[16 * i + 14]);
+    f15 = _mm256_load_si256(&a->vec[16 * i + 15]);
     f0 = _mm256_mulhi_epi16(f0, v);
     f1 = _mm256_mulhi_epi16(f1, v);
+    f2 = _mm256_mulhi_epi16(f2, v);
+    f3 = _mm256_mulhi_epi16(f3, v);
+    f4 = _mm256_mulhi_epi16(f4, v);
+    f5 = _mm256_mulhi_epi16(f5, v);
+    f6 = _mm256_mulhi_epi16(f6, v);
+    f7 = _mm256_mulhi_epi16(f7, v);
+    f8 = _mm256_mulhi_epi16(f8, v);
+    f9 = _mm256_mulhi_epi16(f9, v);
+    f10 = _mm256_mulhi_epi16(f10, v);
+    f11 = _mm256_mulhi_epi16(f11, v);
+    f12 = _mm256_mulhi_epi16(f12, v);
+    f13 = _mm256_mulhi_epi16(f13, v);
+    f14 = _mm256_mulhi_epi16(f14, v);
+    f15 = _mm256_mulhi_epi16(f15, v);
     f0 = _mm256_mulhrs_epi16(f0, shift1);
     f1 = _mm256_mulhrs_epi16(f1, shift1);
+    f2 = _mm256_mulhrs_epi16(f2, shift1);
+    f3 = _mm256_mulhrs_epi16(f3, shift1);
+    f4 = _mm256_mulhrs_epi16(f4, shift1);
+    f5 = _mm256_mulhrs_epi16(f5, shift1);
+    f6 = _mm256_mulhrs_epi16(f6, shift1);
+    f7 = _mm256_mulhrs_epi16(f7, shift1);
+    f8 = _mm256_mulhrs_epi16(f8, shift1);
+    f9 = _mm256_mulhrs_epi16(f9, shift1);
+    f10 = _mm256_mulhrs_epi16(f10, shift1);
+    f11 = _mm256_mulhrs_epi16(f11, shift1);
+    f12 = _mm256_mulhrs_epi16(f12, shift1);
+    f13 = _mm256_mulhrs_epi16(f13, shift1);
+    f14 = _mm256_mulhrs_epi16(f14, shift1);
+    f15 = _mm256_mulhrs_epi16(f15, shift1);
     f0 = _mm256_and_si256(f0, mask);
     f1 = _mm256_and_si256(f1, mask);
-    f0 = _mm256_packus_epi16(f0, f1);
-    f0 = _mm256_maddubs_epi16(f0, shift2); // a0 a1 a2 a3 b0 b1 b2 b3 a4 a5 a6 a7 b4 b5 b6 b7
-    f0 = _mm256_madd_epi16(f0, shift3);    // a0 a1 b0 b1 a2 a3 b2 b3
-    f0 = _mm256_sllv_epi32(f0, sllvdidx);
-    f0 = _mm256_srlv_epi64(f0, sllvdidx);
-    f0 = _mm256_shuffle_epi8(f0, shufbidx);
-    t0 = _mm256_castsi256_si128(f0);
-    t1 = _mm256_extracti128_si256(f0, 1);
-    t0 = _mm_blendv_epi8(t0, t1, _mm256_castsi256_si128(shufbidx));
-    _mm_storeu_si128((__m128i *)&r[20 * i + 0], t0);
-    memcpy(&r[20 * i + 16], &t1, 4);
+    f2 = _mm256_and_si256(f2, mask);
+    f3 = _mm256_and_si256(f3, mask);
+    f4 = _mm256_and_si256(f4, mask);
+    f5 = _mm256_and_si256(f5, mask);
+    f6 = _mm256_and_si256(f6, mask);
+    f7 = _mm256_and_si256(f7, mask);
+    f8 = _mm256_and_si256(f8, mask);
+    f9 = _mm256_and_si256(f9, mask);
+    f10 = _mm256_and_si256(f10, mask);
+    f11 = _mm256_and_si256(f11, mask);
+    f12 = _mm256_and_si256(f12, mask);
+    f13 = _mm256_and_si256(f13, mask);
+    f14 = _mm256_and_si256(f14, mask);
+    f15 = _mm256_and_si256(f15, mask);
+
+    f1 = _mm256_slli_epi16(f1, 5);
+    f0 = _mm256_add_epi16(f0, f1);
+    f2 = _mm256_slli_epi16(f2, 10);
+    f0 = _mm256_add_epi16(f0, f2);
+    g = _mm256_slli_epi16(f3, 15);
+    f0 = _mm256_add_epi16(f0, g);    //f0 = f3[0] | f2[4:0] | f1[4:0] | f0[4:0](以第一个16-bit为例)
+    f3 = _mm256_srli_epi16(f3, 1);
+    f4 = _mm256_slli_epi16(f4, 4);
+    f3 = _mm256_add_epi16(f3, f4);
+    f5 = _mm256_slli_epi16(f5, 9);
+    f3 = _mm256_add_epi16(f3, f5);
+    g = _mm256_slli_epi16(g, 14);
+    f3 = _mm256_add_epi16(f3, g);    //f3 = f6[1：0] | f5[4:0] | f4[4:0] | f3[4:1]
+    f6 = _mm256_srli_epi16(f6, 2);
+    f7 = _mm256_slli_epi16(f7, 3);
+    f6 = _mm256_add_epi16(f6, f7);
+    f8 = _mm256_slli_epi16(f8, 8);
+    f6 = _mm256_add_epi16(f6, f8);
+    g = _mm256_slli_epi16(g, 13);
+    f6 = _mm256_add_epi16(f6, g);    //f6 = f9[2：0] | f8[4:0] | f7[4:0] | f6[4:2]
+    f9 = _mm256_srli_epi16(f9, 3);
+    f10 = _mm256_slli_epi16(f8, 2);
+    f9 = _mm256_add_epi16(f9, f10);
+    f11 = _mm256_slli_epi16(f11, 7);
+    f9 = _mm256_add_epi16(f9, f11);
+    g = _mm256_slli_epi16(f12, 12);
+    f9 = _mm256_add_epi16(f9, g);    //f9 = f12[3：0] | f11[4:0] | f10[4:0] | f9[4:3]
+    f12 = _mm256_srli_epi16(f12, 4);
+    f13 = _mm256_slli_epi16(f13, 1);
+    f12 = _mm256_add_epi16(f12, f13);
+    f14 = _mm256_slli_epi16(f14, 6);
+    f12 = _mm256_add_epi16(f12, f14);
+    f15 = _mm256_slli_epi16(f15, 11);
+    f12 = _mm256_add_epi16(f12, f15);    //f12 = f15[4：0] | f14[4:0] | f13[4:0] | f12[4]
+
+    _mm256_storeu_si256((__m256i *)&r[160 * i + 0], f0);
+    _mm256_storeu_si256((__m256i *)&r[160 * i + 32], f0);
+    _mm256_storeu_si256((__m256i *)&r[160 * i + 64], f0);
+    _mm256_storeu_si256((__m256i *)&r[160 * i + 96], f0);
+    _mm256_storeu_si256((__m256i *)&r[160 * i + 128], f0);
+
   }
+
 }
 
-void poly_decompress(poly *restrict r, const uint8_t a[160])
+void poly_decompress(poly_16 *restrict r, const uint8_t a[160 * 16])
 {
   unsigned int i;
-  __m128i t;
-  __m256i f;
-  int16_t ti;
-  const __m256i q = _mm256_load_si256(&qdata.vec[_16XQ / 16]);
-  const __m256i shufbidx = _mm256_set_epi8(9, 9, 9, 8, 8, 8, 8, 7, 7, 6, 6, 6, 6, 5, 5, 5,
-                                           4, 4, 4, 3, 3, 3, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0);
-  const __m256i mask = _mm256_set_epi16(248, 1984, 62, 496, 3968, 124, 992, 31,
-                                        248, 1984, 62, 496, 3968, 124, 992, 31);
-  const __m256i shift = _mm256_set_epi16(128, 16, 512, 64, 8, 256, 32, 1024,
-                                         128, 16, 512, 64, 8, 256, 32, 1024);
+  // __m128i t;
+  __m256i f0, f1, f2, f3, f4, g;
+  // int16_t ti;
+  const __m256i q = _mm256_load_si256(&qdata_16.vec[_16XQ_16 / 16]);
+  const __m256i mask = _mm256_set1_epi16(31744);    //0b0111 1100 0000 0000
+  // const __m256i shufbidx = _mm256_set_epi8(9, 9, 9, 8, 8, 8, 8, 7, 7, 6, 6, 6, 6, 5, 5, 5,
+  //                                          4, 4, 4, 3, 3, 3, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0);
+  // const __m256i mask = _mm256_set_epi16(248, 1984, 62, 496, 3968, 124, 992, 31,
+  //                                       248, 1984, 62, 496, 3968, 124, 992, 31);
+  // const __m256i shift = _mm256_set_epi16(128, 16, 512, 64, 8, 256, 32, 1024,
+  //                                        128, 16, 512, 64, 8, 256, 32, 1024);
 
   for (i = 0; i < KYBER_N / 16; i++)
   {
-    t = _mm_loadl_epi64((__m128i *)&a[10 * i + 0]);
-    memcpy(&ti, &a[10 * i + 8], 2);
-    t = _mm_insert_epi16(t, ti, 4);
-    f = _mm256_broadcastsi128_si256(t);
-    f = _mm256_shuffle_epi8(f, shufbidx);
-    f = _mm256_and_si256(f, mask);
-    f = _mm256_mullo_epi16(f, shift);
-    f = _mm256_mulhrs_epi16(f, q);
-    _mm256_store_si256(&r->vec[i], f);
+    // t = _mm_loadl_epi64((__m128i *)&a[10 * i + 0]);
+    // memcpy(&ti, &a[10 * i + 8], 2);
+    // t = _mm_insert_epi16(t, ti, 4);
+    // f = _mm256_broadcastsi128_si256(t);
+    // f = _mm256_shuffle_epi8(f, shufbidx);
+    // f = _mm256_and_si256(f, mask);
+    // f = _mm256_mullo_epi16(f, shift);
+    // f = _mm256_mulhrs_epi16(f, q);
+    // _mm256_store_si256(&r->vec[i], f);
+
+    f0 = _mm256_loadu_si256((__m256i *)&a[160 * i + 0]);
+    f1 = _mm256_loadu_si256((__m256i *)&a[160 * i + 32]);
+    f2 = _mm256_loadu_si256((__m256i *)&a[160 * i + 64]);
+    f3 = _mm256_loadu_si256((__m256i *)&a[160 * i + 96]);
+    f4 = _mm256_loadu_si256((__m256i *)&a[160 * i + 128]);
+
+    g = _mm256_slli_epi16(f0, 10);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 0], g);
+    g = _mm256_slli_epi16(f0, 5);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 1], g);
+    g = _mm256_and_si256(f0, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 2], g);
+    f0 = _mm256_srli_epi16(f0, 5);
+    g = _mm256_slli_epi16(f1, 11);
+    f0 = _mm256_add_epi16(f0, g);
+    g = _mm256_and_si256(f0, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 3], g);
+    g = _mm256_slli_epi16(f1, 6);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 4], g);
+    g = _mm256_slli_epi16(f1, 1);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 5], g);
+    f1 = _mm256_srli_epi16(f1, 4);
+    g = _mm256_slli_epi16(f2, 12);
+    f1 = _mm256_add_epi16(f1, g);
+    g = _mm256_and_si256(f1, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 6], g);
+    g = _mm256_slli_epi16(f2, 7);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 7], g);
+    g = _mm256_slli_epi16(f2, 2);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 8], g);
+    f2 = _mm256_srli_epi16(f2, 3);
+    g = _mm256_slli_epi16(f3, 13);
+    f2 = _mm256_add_epi16(f2, g);
+    g = _mm256_and_si256(f2, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 9], g);
+    g = _mm256_slli_epi16(f3, 8);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 10], g);
+    g = _mm256_slli_epi16(f3, 3);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 11], g);
+    f3 = _mm256_srli_epi16(f3, 2);
+    g = _mm256_slli_epi16(f4, 14);
+    f3 = _mm256_add_epi16(f3, g);
+    g = _mm256_and_si256(f3, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 12], g);
+    g = _mm256_slli_epi16(f4, 9);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 13], g);
+    g = _mm256_slli_epi16(f4, 4);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 14], g);
+    g = _mm256_srli_epi16(f4, 1);
+    g = _mm256_and_si256(g, mask);
+    g = _mm256_mulhrs_epi16(g, q);
+    _mm256_storeu_si256((__m256i *)&r->vec[16 * i + 15], g);
+    
   }
 }
 
@@ -549,12 +739,50 @@ void poly_getnoise_eta1_4x(poly_16 *r0,
   
 }
 
+#define NOISE_NBLOCKS2 ((KYBER_ETA2 * KYBER_N / 4 + SHAKE256_RATE - 1) / SHAKE256_RATE)
+void poly_getnoise_eta2_4x(poly_16 *r, const uint8_t seed[KYBER_SYMBYTES*(16*2-1)], uint8_t nonce)
+{
+  // ALIGNED_UINT8(KYBER_ETA2 * KYBER_N / 4)
+  // buf;
+  // prf(buf.coeffs, KYBER_ETA2 * KYBER_N / 4, seed, nonce);
+  // poly_cbd_eta2(r, buf.vec);
+
+  ALIGNED_UINT8(NOISE_NBLOCKS2 * SHAKE256_RATE) buf[4]; // NOISE_NBLOCKS = 1
+  __m256i f;
+  keccakx4_state state;
+
+  for(int i = 0; i < 4; i++) {
+    f = _mm256_loadu_si256((__m256i *)(seed+32*(i*4)*2));
+    _mm256_store_si256(buf[0].vec, f);
+    f = _mm256_loadu_si256((__m256i *)(seed+32*(i*4+1)*2));
+    _mm256_store_si256(buf[1].vec, f);
+    f = _mm256_loadu_si256((__m256i *)(seed+32*(i*4+2)*2));
+    _mm256_store_si256(buf[2].vec, f);
+    f = _mm256_loadu_si256((__m256i *)(seed+32*(i*4+3)*2));
+    _mm256_store_si256(buf[3].vec, f);
+
+    buf[0].coeffs[32] = nonce;
+    buf[1].coeffs[32] = nonce;
+    buf[2].coeffs[32] = nonce;
+    buf[3].coeffs[32] = nonce;
+
+    shake256x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 33);
+    shake256x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, NOISE_NBLOCKS, &state);
+
+    poly_cbd_eta1(r->coeffs+(i*4)*KYBER_N, buf[0].vec);
+    poly_cbd_eta1(r->coeffs+(i*4+1)*KYBER_N, buf[1].vec);
+    poly_cbd_eta1(r->coeffs+(i*4+2)*KYBER_N, buf[2].vec);
+    poly_cbd_eta1(r->coeffs+(i*4+3)*KYBER_N, buf[3].vec);
+  }
+
+}
+
 #if KYBER_K == 2
-void poly_getnoise_eta1122_4x(poly *r0,
-                              poly *r1,
-                              poly *r2,
-                              poly *r3,
-                              const uint8_t seed[32],
+void poly_getnoise_eta1122_4x(poly_16 *r0,
+                              poly_16 *r1,
+                              poly_16 *r2,
+                              poly_16 *r3,
+                              const uint8_t seed[32*(16*2-1)],
                               uint8_t nonce0,
                               uint8_t nonce1,
                               uint8_t nonce2,
@@ -565,25 +793,31 @@ void poly_getnoise_eta1122_4x(poly *r0,
   __m256i f;
   keccakx4_state state;
 
-  f = _mm256_loadu_si256((__m256i *)seed);
-  _mm256_store_si256(buf[0].vec, f);
-  _mm256_store_si256(buf[1].vec, f);
-  _mm256_store_si256(buf[2].vec, f);
-  _mm256_store_si256(buf[3].vec, f);
+  for(int i = 0; i < 16; i++) {
+    f = _mm256_loadu_si256((__m256i *)(seed+32*i*2));
+    _mm256_store_si256(buf[0].vec, f);
+    _mm256_store_si256(buf[1].vec, f);
+    _mm256_store_si256(buf[2].vec, f);
+    _mm256_store_si256(buf[3].vec, f);
 
-  buf[0].coeffs[32] = nonce0;
-  buf[1].coeffs[32] = nonce1;
-  buf[2].coeffs[32] = nonce2;
-  buf[3].coeffs[32] = nonce3;
+    buf[0].coeffs[32] = nonce0;
+    buf[1].coeffs[32] = nonce1;
+    buf[2].coeffs[32] = nonce2;
+    buf[3].coeffs[32] = nonce3;
 
-  shake256x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 33);
-  shake256x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, NOISE_NBLOCKS, &state);
+    shake256x4_absorb_once(&state, buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, 33);
+    shake256x4_squeezeblocks(buf[0].coeffs, buf[1].coeffs, buf[2].coeffs, buf[3].coeffs, NOISE_NBLOCKS, &state);
 
-  poly_cbd_eta1(r0, buf[0].vec);
-  poly_cbd_eta1(r1, buf[1].vec);
-  poly_cbd_eta2(r2, buf[2].vec);
-  poly_cbd_eta2(r3, buf[3].vec);
+    poly_cbd_eta1(r0->coeffs+i*KYBER_N, buf[0].vec);
+    poly_cbd_eta1(r1->coeffs+i*KYBER_N, buf[1].vec);
+    poly_cbd_eta2(r2->coeffs+i*KYBER_N, buf[2].vec);
+    poly_cbd_eta2(r3->coeffs+i*KYBER_N, buf[3].vec);
+  }
+  
 }
+
+
+
 #endif
 #endif
 
