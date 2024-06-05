@@ -29,9 +29,9 @@ void pk_separate16(uint8_t *pk, uint8_t *pk_sepa_16) {   //此函数未按照KYB
 int crypto_kem_keypair(uint8_t *pk,
                        uint8_t *sk)
 {
-  uint8_t buf[SHAKE128_RATE*4];
+  uint8_t buf[KYBER_SYMBYTES*16];
   uint8_t *sk_16 = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
-  keccakx4_state state;
+  // keccakx4_state state;
 
   indcpa_keypair(pk, sk_16);
   // 16个分离的sk||pk||publicseed,无noiseseed
@@ -53,15 +53,15 @@ int crypto_kem_keypair(uint8_t *pk,
              KYBER_INDCPA_PUBLICKEYBYTES/16-KYBER_SYMBYTES);
   }
   // /* Value z for pseudo-random output on reject */
-  randombytes(buf, KYBER_SYMBYTES*4);
-  buf[0] += 0;
-  buf[32] += 1;
-  buf[64] += 2;
-  buf[96] += 3;
-  shake128x4_absorb_once(&state, buf, buf+32, buf+64, buf+96, KYBER_SYMBYTES);
-  shake128x4_squeezeblocks(buf, buf+SHAKE128_RATE, buf+2*SHAKE128_RATE, buf+3*SHAKE128_RATE, 1, &state);  //产生16个随机的z[32], 即uint_8 buf[4*168]
+  randombytes(buf, KYBER_SYMBYTES*16);
+  // buf[0] += 0;
+  // buf[32] += 1;
+  // buf[64] += 2;
+  // buf[96] += 3;
+  // shake128x4_absorb_once(&state, buf, buf+32, buf+64, buf+96, KYBER_SYMBYTES);
+  // shake128x4_squeezeblocks(buf, buf+SHAKE128_RATE, buf+2*SHAKE128_RATE, buf+3*SHAKE128_RATE, 1, &state);  //产生16个随机的z[32], 即uint_8 buf[4*168]
   for(int i = 0; i < 16; i++) {
-    memcpy(sk+(i+1)*((KYBER_INDCPA_SECRETKEYBYTES+KYBER_INDCPA_PUBLICKEYBYTES)/16+KYBER_SYMBYTES)-KYBER_SYMBYTES, buf+i*KYBER_SYMBYTES, KYBER_SYMBYTES);
+    memcpy(sk+(i+1)*(KYBER_SECRETKEYBYTES/16)-KYBER_SYMBYTES, buf+i*KYBER_SYMBYTES, KYBER_SYMBYTES);
   }
 
   free(sk_16);
@@ -76,7 +76,7 @@ int crypto_kem_enc(uint8_t *ct,
 {
   /* To adapt to the shake128x4, the size of buf is defined as 7*168 bytes, which is enough to include 16*32 bytes.
      Need additional space for the concatenation with H(pk), so the total length is 16*32*2 bytes. */
-  uint8_t buf[7*SHAKE128_RATE];
+  uint8_t buf[KYBER_INDCPA_MSGBYTES*32];
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES*16];
   /* Will store the pk whose format is polyvec * 16 || publicseed * 16, i.e., separating the public key and public seed */
@@ -84,20 +84,20 @@ int crypto_kem_enc(uint8_t *ct,
   /* Will store the pk in 16-way format without publicseed */
   // uint8_t *pkseq = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);  //将pk中的polyvec部分变成16-way format并存储在pkseq
   keccakx4_state state;
-  int16_t vprint[KYBER_N*16];
+  // int16_t vprint[KYBER_N*16];
 
   // TODO: 后续完善解释
   // 代码改变原理：原Kyber的randombyte+hash_h是为了产生随机数，现将原
   // Kyber中的hash_h转化为等效的absorb_once+squeezeblocks,因为hash_h
   // 函数内部也就是一个absorb_once+KeccakF1600,squeezeblocks()就是将
   // KeccakF1600进行封装，运算blocks次的KeccakF1600
-  randombytes(buf, KYBER_SYMBYTES*4);
-  buf[0] += 0;
-  buf[32] += 1;
-  buf[64] += 2;
-  buf[96] += 3;
-  shake128x4_absorb_once(&state, buf, buf+32, buf+64, buf+96, KYBER_SYMBYTES);
-  shake128x4_squeezeblocks(buf+3*SHAKE128_RATE, buf+4*SHAKE128_RATE, buf+SHAKE128_RATE*5, buf+SHAKE128_RATE*6, 1, &state);  //产生16个随机的m[32], 即uint_8 buf[4*168]
+  randombytes(buf + KYBER_SYMBYTES*16, KYBER_SYMBYTES*16);
+  // buf[0] += 0;
+  // buf[32] += 1;
+  // buf[64] += 2;
+  // buf[96] += 3;
+  // shake128x4_absorb_once(&state, buf, buf+32, buf+64, buf+96, KYBER_SYMBYTES);
+  // shake128x4_squeezeblocks(buf+3*SHAKE128_RATE, buf+4*SHAKE128_RATE, buf+SHAKE128_RATE*5, buf+SHAKE128_RATE*6, 1, &state);  //产生16个随机的m[32], 即uint_8 buf[4*168]
 
   // for(int i = 0; i < 7*SHAKE128_RATE; i++) {
   //   buf[i] = 1;
@@ -106,20 +106,44 @@ int crypto_kem_enc(uint8_t *ct,
   /* Don't release system RNG output */
   //产生16个H(m)，并且留出下一步进行单路连接H(pk)需要的空间
   for(int i = 0; i < 4; i++) {
-    hash_hx4(buf+8*i*KYBER_SYMBYTES, buf+(8*i+2)*KYBER_SYMBYTES, buf+(8*i+4)*KYBER_SYMBYTES, buf+(8*i+6)*KYBER_SYMBYTES, buf+3*SHAKE128_RATE+KYBER_SYMBYTES*i*4, buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+1), buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+2), buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+3), KYBER_SYMBYTES);
+    hash_hx4(buf+8*i*KYBER_SYMBYTES, 
+             buf+(8*i+2)*KYBER_SYMBYTES, 
+             buf+(8*i+4)*KYBER_SYMBYTES, 
+             buf+(8*i+6)*KYBER_SYMBYTES, 
+             buf+3*SHAKE128_RATE+KYBER_SYMBYTES*i*4, 
+             buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+1), 
+             buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+2), 
+             buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+3), 
+             KYBER_SYMBYTES);
   }
 
   /* Multitarget countermeasure for coins + contributory KEM */
   //下一行函数未进行参数集扩展修改
   pk_separate16(pk, pk_sepa_16);  //这一步将kem_keypair产生的pk分离成每一路都是polyvec+publicseed的正常格式
   for(int i = 0; i < 4; i++) {
-    hash_hx4(buf+(8*i+1)*KYBER_SYMBYTES, buf+(8*i+3)*KYBER_SYMBYTES, buf+(8*i+5)*KYBER_SYMBYTES, buf+(8*i+7)*KYBER_SYMBYTES, pk_sepa_16+KYBER_PUBLICKEYBYTES/16*i*4, pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+1), pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+2), pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+3), KYBER_PUBLICKEYBYTES/16-KYBER_SYMBYTES);
+    hash_hx4(buf+(8*i+1)*KYBER_SYMBYTES, 
+                  buf+(8*i+3)*KYBER_SYMBYTES, 
+                  buf+(8*i+5)*KYBER_SYMBYTES, 
+                  buf+(8*i+7)*KYBER_SYMBYTES, 
+                  pk_sepa_16+KYBER_PUBLICKEYBYTES/16*i*4, 
+                  pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+1), 
+                  pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+2), 
+                  pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+3), 
+                  KYBER_PUBLICKEYBYTES/16-KYBER_SYMBYTES);
   }
 
   //buf = (m||H(pk)) * 16
   //kr = (K||r) * 16
   for(int i = 0; i < 4; i++) {
-    hash_gx4(kr+8*i*KYBER_SYMBYTES, kr+(8*i+2)*KYBER_SYMBYTES, kr+(8*i+4)*KYBER_SYMBYTES, kr+(8*i+6)*KYBER_SYMBYTES, buf+8*i*KYBER_SYMBYTES, buf+(8*i+2)*KYBER_SYMBYTES, buf+(8*i+4)*KYBER_SYMBYTES, buf+(8*i+6)*KYBER_SYMBYTES, KYBER_SYMBYTES*2);
+    hash_gx4(kr+8*i*KYBER_SYMBYTES, 
+             kr+(8*i+2)*KYBER_SYMBYTES, 
+             kr+(8*i+4)*KYBER_SYMBYTES, 
+             kr+(8*i+6)*KYBER_SYMBYTES, 
+             buf+8*i*KYBER_SYMBYTES, 
+             buf+(8*i+2)*KYBER_SYMBYTES, 
+             buf+(8*i+4)*KYBER_SYMBYTES, 
+             buf+(8*i+6)*KYBER_SYMBYTES, 
+             KYBER_SYMBYTES*2);
   }
 
   /* coins are in kr+KYBER_SYMBYTES */
@@ -182,12 +206,28 @@ int crypto_kem_enc(uint8_t *ct,
 
   /* overwrite coins in kr with H(c) */
   for(int i = 0; i < 4; i++) {
-    hash_hx4(kr+(8*i+1)*KYBER_SYMBYTES, kr+(8*i+3)*KYBER_SYMBYTES, kr+(8*i+5)*KYBER_SYMBYTES, kr+(8*i+7)*KYBER_SYMBYTES, ct+KYBER_CIPHERTEXTBYTES/16*i*4, ct+KYBER_CIPHERTEXTBYTES/16*(i*4+1), ct+KYBER_CIPHERTEXTBYTES/16*(i*4+2), ct+KYBER_CIPHERTEXTBYTES/16*(i*4+3), KYBER_CIPHERTEXTBYTES/16);
+    hash_hx4(kr+(8*i+1)*KYBER_SYMBYTES, 
+             kr+(8*i+3)*KYBER_SYMBYTES, 
+             kr+(8*i+5)*KYBER_SYMBYTES, 
+             kr+(8*i+7)*KYBER_SYMBYTES, 
+             ct+KYBER_CIPHERTEXTBYTES/16*i*4, 
+             ct+KYBER_CIPHERTEXTBYTES/16*(i*4+1), 
+             ct+KYBER_CIPHERTEXTBYTES/16*(i*4+2), 
+             ct+KYBER_CIPHERTEXTBYTES/16*(i*4+3), 
+             KYBER_CIPHERTEXTBYTES/16);
   }
   
   /* hash concatenation of pre-k and H(c) to k */
   for(int i = 0; i < 4; i++) {
-    kdfx4(ss + 4*i*KYBER_SSBYTES, ss + (4*i+1)*KYBER_SSBYTES, ss + (4*i+2)*KYBER_SSBYTES, ss + (4*i+3)*KYBER_SSBYTES, kr+8*i*KYBER_SYMBYTES, kr+(8*i+2)*KYBER_SYMBYTES, kr+(8*i+4)*KYBER_SYMBYTES, kr+(8*i+6)*KYBER_SYMBYTES, 2*KYBER_SYMBYTES);
+    kdfx4(ss + 4*i*KYBER_SSBYTES, 
+          ss + (4*i+1)*KYBER_SSBYTES, 
+          ss + (4*i+2)*KYBER_SSBYTES, 
+          ss + (4*i+3)*KYBER_SSBYTES, 
+          kr+8*i*KYBER_SYMBYTES, 
+          kr+(8*i+2)*KYBER_SYMBYTES, 
+          kr+(8*i+4)*KYBER_SYMBYTES, 
+          kr+(8*i+6)*KYBER_SYMBYTES, 
+          2*KYBER_SYMBYTES);
   }
 
   free(pk_sepa_16);
@@ -197,7 +237,7 @@ int crypto_kem_enc(uint8_t *ct,
 
 
 int crypto_kem_dec(uint8_t *ss,
-                   const uint8_t *ct,
+                   uint8_t *ct,
                    const uint8_t *sk)
 {
   //现在传进来的sk参数是16个分离的sk||pk||publicseed||H(pk)||random
@@ -225,7 +265,15 @@ int crypto_kem_dec(uint8_t *ss,
   
   //After the step above, buf = (m||H(pk)) * 16
   for(int i = 0; i < 4; i++) {
-    hash_gx4(kr+8*i*KYBER_SYMBYTES, kr+(8*i+2)*KYBER_SYMBYTES, kr+(8*i+4)*KYBER_SYMBYTES, kr+(8*i+6)*KYBER_SYMBYTES, buf+8*i*KYBER_SYMBYTES, buf+(8*i+2)*KYBER_SYMBYTES, buf+(8*i+4)*KYBER_SYMBYTES, buf+(8*i+6)*KYBER_SYMBYTES, KYBER_SYMBYTES*2);
+    hash_gx4(kr+8*i*KYBER_SYMBYTES, 
+             kr+(8*i+2)*KYBER_SYMBYTES, 
+             kr+(8*i+4)*KYBER_SYMBYTES, 
+             kr+(8*i+6)*KYBER_SYMBYTES, 
+             buf+8*i*KYBER_SYMBYTES, 
+             buf+(8*i+2)*KYBER_SYMBYTES, 
+             buf+(8*i+4)*KYBER_SYMBYTES, 
+             buf+(8*i+6)*KYBER_SYMBYTES, 
+             KYBER_SYMBYTES*2);
   }
   
   //After the step above, kr = (K||r) * 16
@@ -236,7 +284,15 @@ int crypto_kem_dec(uint8_t *ss,
 
   /* overwrite coins in kr with H(c) */
   for(int i = 0; i < 4; i++) {
-    hash_hx4(kr+KYBER_SYMBYTES*(8*i+1), kr+KYBER_SYMBYTES*(8*i+3), kr+KYBER_SYMBYTES*(8*i+5), kr+KYBER_SYMBYTES*(8*i+7), ct+KYBER_CIPHERTEXTBYTES/16*i*4, ct+KYBER_CIPHERTEXTBYTES/16*(i*4+1), ct+KYBER_CIPHERTEXTBYTES/16*(i*4+2), ct+KYBER_CIPHERTEXTBYTES/16*(i*4+3), KYBER_CIPHERTEXTBYTES/16);
+    hash_hx4(kr+KYBER_SYMBYTES*(8*i+1), 
+             kr+KYBER_SYMBYTES*(8*i+3), 
+             kr+KYBER_SYMBYTES*(8*i+5), 
+             kr+KYBER_SYMBYTES*(8*i+7), 
+             ct+KYBER_CIPHERTEXTBYTES/16*i*4, 
+             ct+KYBER_CIPHERTEXTBYTES/16*(i*4+1), 
+             ct+KYBER_CIPHERTEXTBYTES/16*(i*4+2), 
+             ct+KYBER_CIPHERTEXTBYTES/16*(i*4+3), 
+             KYBER_CIPHERTEXTBYTES/16);
   }
 
 #ifdef test_kem_dec_flag
@@ -284,7 +340,15 @@ int crypto_kem_dec(uint8_t *ss,
   
   /* hash concatenation of pre-k and H(c) to k */
   for(int i = 0; i < 4; i++) {
-    kdfx4(ss + 4*i*KYBER_SSBYTES, ss + (4*i+1)*KYBER_SSBYTES, ss + (4*i+2)*KYBER_SSBYTES, ss + (4*i+3)*KYBER_SSBYTES, kr+8*i*KYBER_SYMBYTES, kr+(8*i+2)*KYBER_SYMBYTES, kr+(8*i+4)*KYBER_SYMBYTES, kr+(8*i+6)*KYBER_SYMBYTES, 2*KYBER_SYMBYTES);
+    kdfx4(ss + 4*i*KYBER_SSBYTES, 
+          ss + (4*i+1)*KYBER_SSBYTES, 
+          ss + (4*i+2)*KYBER_SSBYTES, 
+          ss + (4*i+3)*KYBER_SSBYTES, 
+          kr+8*i*KYBER_SYMBYTES, 
+          kr+(8*i+2)*KYBER_SYMBYTES, 
+          kr+(8*i+4)*KYBER_SYMBYTES, 
+          kr+(8*i+6)*KYBER_SYMBYTES, 
+          2*KYBER_SYMBYTES);
   }
 
   free(skseq);

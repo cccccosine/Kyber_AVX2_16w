@@ -72,7 +72,7 @@ void keypair_formseqto16(uint8_t *key, uint8_t *t, uint8_t *keyseq) {
   keypair_formseqto16_AVX2(key, t, keyseq, qdata_16.vec);
 }
 
-void msg_formseqto16(uint8_t *m, uint8_t *mseq) {  //目前不考虑msg的from/to16变换，因为msg本身是uint8_t类型，不是很适配AVX2的16bit运算
+void msg_formseqto16(const uint8_t *m, uint8_t *mseq) {  //目前不考虑msg的from/to16变换，因为msg本身是uint8_t类型，不是很适配AVX2的16bit运算
   for(int i = 0; i < 32; i++) {
     for(int j = 0; j < 16; j++) {
       mseq[i*16+j] = m[j*64+i];  //kem中的每个单路msg后面还包括了H(pk),所以总长度是32*16*2
@@ -149,7 +149,7 @@ static void pack_sk(uint8_t r[KYBER_INDCPA_SECRETKEYBYTES], polyvec_16 *sk)
 }
 
 
-static void unpack_sk(polyvec *sk, const uint8_t packedsk[KYBER_INDCPA_SECRETKEYBYTES])
+static void unpack_sk(polyvec_16 *sk, const uint8_t packedsk[KYBER_INDCPA_SECRETKEYBYTES])
 {
   polyvec_frombytes(sk, packedsk);
 }
@@ -289,14 +289,14 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32*(2*16-1)], int transposed)
 
 }
 #elif KYBER_K == 3
-void gen_matrix(polyvec_16 *a, const uint8_t seed[32*(2*16-1)], int transposed)
+void gen_matrix(polyvec_16 *a, const uint8_t seed[32*(2*16)], int transposed)
 {
   unsigned int ctr0, ctr1, ctr2, ctr3;
   ALIGNED_UINT8(REJ_UNIFORM_AVX_NBLOCKS*SHAKE128_RATE) buf[4];   //3*168
-  __m256i f;
+  // __m256i f;
   __m256i f0, f1, f2, f3;
   keccakx4_state state;
-  keccak_state state1x;
+  // keccak_state state1x;
 
   // for(int i = 0; i < 16; i++) {
   //   f = _mm256_loadu_si256((__m256i *)(seed+i*32*2)); 
@@ -616,7 +616,7 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
                     // uint16_t pkpvprint[KYBER_INDCPA_PUBLICKEYBYTES]
                     )
 {
-  unsigned int i, j, k, p;
+  // unsigned int i, j, k, p;
   uint8_t buf[2*KYBER_SYMBYTES*16];// pkseq[KYBER_INDCPA_PUBLICKEYBYTES], skseq[KYBER_INDCPA_SECRETKEYBYTES], tkp[KYBER_INDCPA_PUBLICKEYBYTES];
   uint8_t *pkseq = (uint8_t *)malloc(KYBER_INDCPA_PUBLICKEYBYTES);
   uint8_t *skseq = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
@@ -630,10 +630,10 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
     hash_gx4(buf+8*i*KYBER_SYMBYTES, buf+(8*i+2)*KYBER_SYMBYTES, buf+(8*i+4)*KYBER_SYMBYTES, buf+(8*i+6)*KYBER_SYMBYTES, buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*i*4, buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+1), buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+2), buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+3), KYBER_SYMBYTES);
   }
 
-  // for (i = 0; i < KYBER_K; i++) {
-  //   for (j = 0; j < KYBER_K; j++) {
-  //     for(k = 0; k < KYBER_N; k++){
-  //       for(p = 0; p < 16; p++) {
+  // for (int i = 0; i < KYBER_K; i++) {
+  //   for (int j = 0; j < KYBER_K; j++) {
+  //     for(int k = 0; k < KYBER_N; k++){
+  //       for(int p = 0; p < 16; p++) {
   //         a[i].vec[j].coeffs[k*16+p] = 19;
   //       }
   //     }
@@ -669,9 +669,9 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 #if KYBER_K == 2
   poly_getnoise_eta1_4x(skpv.vec+0, skpv.vec+1, e.vec+0, e.vec+1, noiseseed, 0, 1, 2, 3);
 #elif KYBER_K == 3 
-  // for (j = 0; j < KYBER_K; j++) {
-  //   for(k = 0; k < 256; k++) {
-  //     for(p = 0; p < 16; p++) {
+  // for (int j = 0; j < KYBER_K; j++) {
+  //   for(int k = 0; k < 256; k++) {
+  //     for(int p = 0; p < 16; p++) {
   //       skpv.vec[j].coeffs[k*16+p] = 19;
   //       e.vec[j].coeffs[k*16+p] = 19;
   //     }
@@ -692,7 +692,7 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_ntt(&eseq);
 
   // matrix-vector multiplication
-  for(i=0;i<KYBER_K;i++) {
+  for(int i=0;i<KYBER_K;i++) {
     polyvec_basemul_acc_montgomery(&pkpvseq.vec[i], &aseq[i], &skpvseq);
     poly_tomont(&pkpvseq.vec[i]);
   }
@@ -710,10 +710,10 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 
   memcpy(pk+KYBER_POLYVECBYTES*16, publicseed, KYBER_SYMBYTES*16*2);
 
-  // for(i = 0; i < KYBER_K; i++) {
-  //   // for(j = 0; j < KYBER_N; j++) {
-  //   for(j = 0; j < 384; j++) {
-  //     for(k = 0; k < 16; k++) {
+  // for(int i = 0; i < KYBER_K; i++) {
+  //   // for(int j = 0; j < KYBER_N; j++) {
+  //   for(int j = 0; j < 384; j++) {
+  //     for(int k = 0; k < 16; k++) {
   //       // skpvprint[i*KYBER_N+j] = skpv.vec[i].coeffs[j];
   //       // pkpvprint[(i*KYBER_N+j)*16+k] = skpvseq.vec[i].coeffs[j*16+k];
   //       // pkpvprint[(i*KYBER_N+j)*16+k] = pkpvseq.vec[i].coeffs[j*16+k];
@@ -735,13 +735,13 @@ void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 
 void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
                 const uint8_t m[KYBER_INDCPA_MSGBYTES*32],
-                const uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
-                const uint8_t coins[KYBER_SYMBYTES*32]
+                uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
+                uint8_t coins[KYBER_SYMBYTES*32-32]
                 // int16_t pkpvprint[KYBER_K*KYBER_N*16],
                 // int16_t vprint[KYBER_N*16]
                 )
 {
-  unsigned int i, j, l, p;
+  // unsigned int i, j, l, p;
   uint8_t seed[KYBER_SYMBYTES*32], mseq[KYBER_INDCPA_MSGBYTES*32]; //cseq[KYBER_INDCPA_BYTES], tc[KYBER_INDCPA_BYTES], pkseq[KYBER_INDCPA_PUBLICKEYBYTES], tpk[KYBER_INDCPA_PUBLICKEYBYTES];
   uint8_t *cseq = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
   uint8_t *tc = (uint8_t *)malloc(KYBER_INDCPA_BYTES);
@@ -767,10 +767,10 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   msg_formseqto16(m, mseq);
   poly_frommsg_16(&k, mseq);
 
-  // for (i = 0; i < KYBER_K; i++) {
-  //   for (j = 0; j < KYBER_K; j++) {
-  //     for(p = 0; p < KYBER_N; p++) {
-  //       for(l = 0; l < 16; l++) {
+  // for (int i = 0; i < KYBER_K; i++) {
+  //   for (int j = 0; j < KYBER_K; j++) {
+  //     for(int p = 0; p < KYBER_N; p++) {
+  //       for(int l = 0; l < 16; l++) {
   //         at[i].vec[j].coeffs[p*16+l] = 19;
   //       }
   //     }
@@ -805,9 +805,9 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   poly_getnoise_eta1122_4x(sp.vec+0, sp.vec+1, ep.vec+0, ep.vec+1, coins, 0, 1, 2, 3);
   poly_getnoise_eta2_4x(&epp, coins, 4);
 #elif KYBER_K == 3
-  // for (j = 0; j < KYBER_K; j++) {
-  //   for(l = 0; l < KYBER_N; l++) {
-  //     for(p = 0; p < 16; p++) {
+  // for (int j = 0; j < KYBER_K; j++) {
+  //   for(int l = 0; l < KYBER_N; l++) {
+  //     for(int p = 0; p < 16; p++) {
   //       sp.vec[j].coeffs[l*16+p] = 21;
   //       ep.vec[j].coeffs[l*16+p] = 21;
   //       epp.coeffs[l*16+p] = 21;
@@ -829,7 +829,7 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   polyvec_ntt(&spseq);
 
   // matrix-vector multiplication
-  for(i=0;i<KYBER_K;i++)
+  for(int i=0;i<KYBER_K;i++)
     polyvec_basemul_acc_montgomery(&b.vec[i], &atseq[i], &spseq);
   polyvec_basemul_acc_montgomery(&v, &pkpvseq, &spseq);
 
@@ -842,8 +842,8 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
   polyvec_reduce(&b);
   poly_reduce(&v);
 
-  // for(i = 0; i < 3; i++) {
-    // for(j = 0; j < 256; j++) {
+  // for(int i = 0; i < 3; i++) {
+    // for(int j = 0; j < 256; j++) {
     //   for(int k = 0; k < 16; k++) {
     //     // b.vec[i].coeffs[j*16+k] = 1024;
     //     vprint[j*16+k] = v.coeffs[j*16+k];
@@ -863,8 +863,8 @@ void indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
 
 
 void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES*32],
-                const uint8_t c[KYBER_INDCPA_BYTES],
-                const uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]
+                uint8_t c[KYBER_INDCPA_BYTES],
+                uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]
                 )
 {
   polyvec_16 b, skpvseq;

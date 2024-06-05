@@ -13,7 +13,7 @@ HEADERS= consts_16.h ntt_16.h params.h align.h cpucycles.h speed_print.h fq.inc 
 		 randombytes.h reduce.h rejsample.h symmetric.h clocks.h kem_16.h verify_16.h
 		 
 all: $(HEADERS) $(SOURCES)
-	$(CC) $(CFLAGS) $(SOURCES) -o $@
+	$(CC) $(CFLAGS) $(SOURCES) -o main
 
 .PHONY: clean
 

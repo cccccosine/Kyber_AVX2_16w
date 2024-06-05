@@ -431,7 +431,7 @@ void poly_frommsg_16(poly_16 *restrict r, const uint8_t msg[KYBER_INDCPA_MSGBYTE
 #if (KYBER_INDCPA_MSGBYTES != 32)
 #error "KYBER_INDCPA_MSGBYTES must be equal to 32!"
 #endif
-  __m256i f, g0, g1, g2, g3, h0, h1, h2, h3;
+  __m256i f, g0, g1, g2, g3;
   const __m256i idx1 = _mm256_set_epi8(15, 15, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10, 9, 9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0);
   const __m256i idx2 = _mm256_set_epi8(31, 31, 30, 30, 29, 29, 28, 28, 27, 27, 26, 26, 25, 25, 24, 24, 23, 23, 22, 22, 21, 21, 20, 20, 19, 19, 18, 18, 17, 17, 16, 16);
 
@@ -851,7 +851,7 @@ void poly_add(poly_16 *r, const poly_16 *a, const poly_16 *b)
   unsigned int i = 0;
   __m256i f0, f1;
 
-  uint64_t start, end, cost[KYBER_N];
+  // uint64_t start, end, cost[KYBER_N];
   // _mm_prefetch(&a->vec[i + 2], _MM_HINT_T0);
   // _mm_prefetch(&b->vec[i + 2], _MM_HINT_T0);
   // f0 = _mm256_load_si256(&a->vec[i]);
