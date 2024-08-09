@@ -54,12 +54,7 @@ int crypto_kem_keypair(uint8_t *pk,
   }
   // /* Value z for pseudo-random output on reject */
   randombytes(buf, KYBER_SYMBYTES*16);
-  // buf[0] += 0;
-  // buf[32] += 1;
-  // buf[64] += 2;
-  // buf[96] += 3;
-  // shake128x4_absorb_once(&state, buf, buf+32, buf+64, buf+96, KYBER_SYMBYTES);
-  // shake128x4_squeezeblocks(buf, buf+SHAKE128_RATE, buf+2*SHAKE128_RATE, buf+3*SHAKE128_RATE, 1, &state);  //产生16个随机的z[32], 即uint_8 buf[4*168]
+
   for(int i = 0; i < 16; i++) {
     memcpy(sk+(i+1)*(KYBER_SECRETKEYBYTES/16)-KYBER_SYMBYTES, buf+i*KYBER_SYMBYTES, KYBER_SYMBYTES);
   }
@@ -86,18 +81,7 @@ int crypto_kem_enc(uint8_t *ct,
   keccakx4_state state;
   // int16_t vprint[KYBER_N*16];
 
-  // TODO: 后续完善解释
-  // 代码改变原理：原Kyber的randombyte+hash_h是为了产生随机数，现将原
-  // Kyber中的hash_h转化为等效的absorb_once+squeezeblocks,因为hash_h
-  // 函数内部也就是一个absorb_once+KeccakF1600,squeezeblocks()就是将
-  // KeccakF1600进行封装，运算blocks次的KeccakF1600
   randombytes(buf + KYBER_SYMBYTES*16, KYBER_SYMBYTES*16);
-  // buf[0] += 0;
-  // buf[32] += 1;
-  // buf[64] += 2;
-  // buf[96] += 3;
-  // shake128x4_absorb_once(&state, buf, buf+32, buf+64, buf+96, KYBER_SYMBYTES);
-  // shake128x4_squeezeblocks(buf+3*SHAKE128_RATE, buf+4*SHAKE128_RATE, buf+SHAKE128_RATE*5, buf+SHAKE128_RATE*6, 1, &state);  //产生16个随机的m[32], 即uint_8 buf[4*168]
 
   // for(int i = 0; i < 7*SHAKE128_RATE; i++) {
   //   buf[i] = 1;
@@ -110,10 +94,10 @@ int crypto_kem_enc(uint8_t *ct,
              buf+(8*i+2)*KYBER_SYMBYTES, 
              buf+(8*i+4)*KYBER_SYMBYTES, 
              buf+(8*i+6)*KYBER_SYMBYTES, 
-             buf+3*SHAKE128_RATE+KYBER_SYMBYTES*i*4, 
-             buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+1), 
-             buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+2), 
-             buf+3*SHAKE128_RATE+KYBER_SYMBYTES*(i*4+3), 
+             buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*i*4, 
+             buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+1), 
+             buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+2), 
+             buf+KYBER_SYMBYTES*16+KYBER_SYMBYTES*(i*4+3), 
              KYBER_SYMBYTES);
   }
 
@@ -122,14 +106,14 @@ int crypto_kem_enc(uint8_t *ct,
   pk_separate16(pk, pk_sepa_16);  //这一步将kem_keypair产生的pk分离成每一路都是polyvec+publicseed的正常格式
   for(int i = 0; i < 4; i++) {
     hash_hx4(buf+(8*i+1)*KYBER_SYMBYTES, 
-                  buf+(8*i+3)*KYBER_SYMBYTES, 
-                  buf+(8*i+5)*KYBER_SYMBYTES, 
-                  buf+(8*i+7)*KYBER_SYMBYTES, 
-                  pk_sepa_16+KYBER_PUBLICKEYBYTES/16*i*4, 
-                  pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+1), 
-                  pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+2), 
-                  pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+3), 
-                  KYBER_PUBLICKEYBYTES/16-KYBER_SYMBYTES);
+             buf+(8*i+3)*KYBER_SYMBYTES, 
+             buf+(8*i+5)*KYBER_SYMBYTES, 
+             buf+(8*i+7)*KYBER_SYMBYTES, 
+             pk_sepa_16+KYBER_PUBLICKEYBYTES/16*i*4, 
+             pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+1), 
+             pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+2), 
+             pk_sepa_16+KYBER_PUBLICKEYBYTES/16*(i*4+3), 
+             KYBER_PUBLICKEYBYTES/16-KYBER_SYMBYTES);
   }
 
   //buf = (m||H(pk)) * 16
@@ -335,7 +319,7 @@ int crypto_kem_dec(uint8_t *ss,
 
   /* Overwrite pre-k with z on re-encryption failure */
   for(int i = 0; i < 16; i++) {
-    cmov(kr+KYBER_SYMBYTES*(2*i+1), sk+KYBER_SECRETKEYBYTES/16*i-KYBER_SYMBYTES, KYBER_SYMBYTES, fail);
+    cmov(kr+KYBER_SYMBYTES*2*i, sk+KYBER_SECRETKEYBYTES/16*i-KYBER_SYMBYTES, KYBER_SYMBYTES, fail);
   }
   
   /* hash concatenation of pre-k and H(c) to k */

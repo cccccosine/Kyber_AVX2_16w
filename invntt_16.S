@@ -170,6 +170,7 @@ vmovdqa     (_16XQINV_16-((\off/2)+4)*16)*2(%rsi), %ymm1
 butterfly0	4,5,8,9,6,7,10,11,15,1,2,3,\off
 
 /* level 1 */
+
 vmovdqa     (2032-(((\off/16)%2*2)+1+(\off/32)*14)*16)*2(%rsi), %ymm2
 vmovdqa     (2032-(((\off/16)%2*2)+5+(\off/32)*14)*16)*2(%rsi), %ymm15
 vmovdqa     (2032-(((\off/16)%2*2)+2+(\off/32)*14)*16)*2(%rsi), %ymm3
@@ -178,6 +179,7 @@ vmovdqa     (2032-(((\off/16)%2*2)+6+(\off/32)*14)*16)*2(%rsi), %ymm1
 butterfly	4,6,8,10,5,7,9,11,15,1,2,3
 
 /* level 2 */
+
 vmovdqa     (2032-(((\off/16)%2)+9+(\off/32)*14)*16)*2(%rsi), %ymm2
 vmovdqa     (2032-(((\off/16)%2)+11+(\off/32)*14)*16)*2(%rsi), %ymm1
 
@@ -225,7 +227,15 @@ red16		8
 red16		9
 .endif
 
+.if (\off%128) == 3
+red16		4
+red16		5
+red16		8
+red16		9
+.endif
+
 /* level 4 */
+
 vmovdqa     (240-((\off/128)*2+1)*16)*2(%rsi), %ymm2
 vmovdqa     (240-((\off/128)*2+5)*16)*2(%rsi), %ymm15
 vmovdqa     (240-((\off/128)*2+2)*16)*2(%rsi), %ymm3
@@ -233,40 +243,72 @@ vmovdqa     (240-((\off/128)*2+6)*16)*2(%rsi), %ymm1
 
 butterfly	4,6,8,10,5,7,9,11,15,1,2,3
 
+vmovdqa		_16XV_16*2(%rsi),%ymm1
 .if (\off%128) == 4
 red16		4
+red16       8
 .endif
+
 .if (\off%128) == 5
 red16		4
+red16       8
 .endif
+
 .if (\off%128) == 6
 red16		4
+red16       8
 .endif
+
 .if (\off%128) == 7
 red16		4
+red16       8
 .endif
+
 /* level 5 */
+
 vmovdqa     (112-((\off/128)+1)*16)*2(%rsi), %ymm2
 vmovdqa     (112-((\off/128)+3)*16)*2(%rsi), %ymm1
 
 butterfly	4,6,5,7,8,10,9,11,1,1,2,2
 
+vmovdqa		_16XV_16*2(%rsi),%ymm1
 .if (\off%128) == 0 
 red16		4
 .endif
+
 .if (\off%128) == 1 
 red16		4
 .endif
+
 .if (\off%128) == 8 
 red16		4
 .endif
+
+.if (\off%128) == 9 
+red16		4
+.endif
+
 .if (\off%128) == 10
 red16		4
 .endif
+
+.if (\off%128) == 11 
+red16		4
+.endif
+
 .if (\off%128) == 12
 red16		4
 .endif
+
+.if (\off%128) == 13 
+red16		4
+.endif
+
 .if (\off%128) == 14
+red16		4
+.endif
+
+.if (\off%128) == 15 
 red16		4
 .endif
 
