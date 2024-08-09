@@ -11,9 +11,6 @@
 #include "randombytes.h"
 #include "rejsample.h"
 
-// #define test_kem_enc_flag 1
-// #define test_kem_dec_flag 1
-
 //16个单独pk需要变成(packed pk)+publicseed的形式才可进行unpack操作
 void pk_separate16(uint8_t *pk, uint8_t *pk_sepa_16) {   //此函数未按照KYBER_K进行修改
   for(int i = 0; i < 16; i++) {
@@ -69,23 +66,15 @@ int crypto_kem_enc(uint8_t *ct,
                    uint8_t *ss,
                    uint8_t *pk)
 {
-  /* To adapt to the shake128x4, the size of buf is defined as 7*168 bytes, which is enough to include 16*32 bytes.
-     Need additional space for the concatenation with H(pk), so the total length is 16*32*2 bytes. */
   uint8_t buf[KYBER_INDCPA_MSGBYTES*32];
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES*16];
   /* Will store the pk whose format is polyvec * 16 || publicseed * 16, i.e., separating the public key and public seed */
   uint8_t *pk_sepa_16 = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);  //16个单独pk需要变成polyvec+publicseed的形式
   /* Will store the pk in 16-way format without publicseed */
-  // uint8_t *pkseq = (uint8_t *)malloc(KYBER_PUBLICKEYBYTES);  //将pk中的polyvec部分变成16-way format并存储在pkseq
   keccakx4_state state;
-  // int16_t vprint[KYBER_N*16];
 
   randombytes(buf + KYBER_SYMBYTES*16, KYBER_SYMBYTES*16);
-
-  // for(int i = 0; i < 7*SHAKE128_RATE; i++) {
-  //   buf[i] = 1;
-  // }
 
   /* Don't release system RNG output */
   //产生16个H(m)，并且留出下一步进行单路连接H(pk)需要的空间
@@ -102,7 +91,6 @@ int crypto_kem_enc(uint8_t *ct,
   }
 
   /* Multitarget countermeasure for coins + contributory KEM */
-  //下一行函数未进行参数集扩展修改
   pk_separate16(pk, pk_sepa_16);  //这一步将kem_keypair产生的pk分离成每一路都是polyvec+publicseed的正常格式
   for(int i = 0; i < 4; i++) {
     hash_hx4(buf+(8*i+1)*KYBER_SYMBYTES, 
@@ -132,61 +120,6 @@ int crypto_kem_enc(uint8_t *ct,
 
   /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(ct, buf, pk, kr+KYBER_SYMBYTES);  //ct是one-way格式, 使用的pk需要是polyvec*16+publicseed*16的形式
-
-#ifdef test_kem_enc_flag 
-  FILE *f0 = fopen("test_kem_enc_ct.txt", "w+");
-
-  for (int i = 0; i < KYBER_CIPHERTEXTBYTES/16; i++)
-  {
-    for(int j = 0; j < 16; j++) {
-      fprintf(f0, "%7d", ct[i*16+j]);
-    }
-      fputs("\n", f0);
-  }
-
-  FILE *f1 = fopen("test_kem_enc_buf.txt", "w+");
-
-  for (int i = 0; i < 64; i++)
-  {
-    for(int j = 0; j < 16; j++) {
-      fprintf(f1, "%7d", buf[j+i*16]);
-    }
-      fputs("\n", f1);
-  }
-
-  FILE *f2 = fopen("test_kem_enc_pk.txt", "w+");
-
-  for (int i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES/16; i++)
-  {
-      for(int j = 0; j < 16; j++) {
-          fprintf(f2, "%7d", pk_sepa_16[i*16+j]);
-      }
-      fputs("\n", f2);
-  }
-
-  // FILE *f3 = fopen("test_kem_enc_coin.txt", "w+");
-
-  // for (int i = 0; i < KYBER_SYMBYTES; i++)
-  // {
-  //     fprintf(f3, "%7d", kr[32+i]);
-  //     fputs("\n", f3);
-  // }
-
-  // FILE *f4 = fopen("test_kem_enc_vprint.txt", "w+");
-  // for(int i = 0; i < KYBER_N; i++) {
-  //   for(int j = 0; j < 16; j++) {
-  //     fprintf(f4, "%7d", vprint[j+16*i]);
-  //   }
-  //   fputs("\n", f4);
-  // }
-
-  fclose(f0);
-  fclose(f1);
-  fclose(f2);
-  // fclose(f3);
-  // fclose(f4);
-
-#endif
 
   /* overwrite coins in kr with H(c) */
   for(int i = 0; i < 4; i++) {
@@ -232,7 +165,6 @@ int crypto_kem_dec(uint8_t *ss,
   uint8_t *skseq = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
   uint8_t *sk_sepa_16 = (uint8_t *)malloc(KYBER_INDCPA_SECRETKEYBYTES);
   uint8_t *pk = (uint8_t *)malloc(KYBER_INDCPA_PUBLICKEYBYTES);
-  // uint8_t skseq[KYBER_INDCPA_SECRETKEYBYTES], sk_sepa_16[KYBER_INDCPA_SECRETKEYBYTES], pk[KYBER_INDCPA_PUBLICKEYBYTES];  //sk_sepa_16和pk变量是将sk从整体sk中分离出来
   ALIGNED_UINT8(KYBER_CIPHERTEXTBYTES) cmp;
 
   for(int i = 0; i < 16; i++) {
@@ -278,44 +210,6 @@ int crypto_kem_dec(uint8_t *ss,
              ct+KYBER_CIPHERTEXTBYTES/16*(i*4+3), 
              KYBER_CIPHERTEXTBYTES/16);
   }
-
-#ifdef test_kem_dec_flag
-
-  FILE *f0 = fopen("test_kem_dec_ct.txt", "w+");
-
-  for (int i = 0; i < KYBER_CIPHERTEXTBYTES/16; i++)
-  {
-    for(int j = 0; j < 16; j++) {
-      fprintf(f0, "%7d", ct[i*16+j]);
-    }
-      fputs("\n", f0);
-  }
-
-  FILE *f1 = fopen("test_kem_dec_buf.txt", "w+");
-
-  for (int i = 0; i < 64; i++)
-  {
-    for(int j = 0; j < 16; j++) {
-      fprintf(f1, "%7d", buf[j+i*16]);
-    }
-      fputs("\n", f1);
-  }
-
-  FILE *f2 = fopen("test_kem_dec_sk.txt", "w+");
-
-  for (int i = 0; i < KYBER_INDCPA_SECRETKEYBYTES/16; i++)
-  {
-      for(int j = 0; j < 16; j++) {
-          fprintf(f2, "%7d", sk_sepa_16[i*16+j]);
-      }
-      fputs("\n", f2);
-  }
-
-  fclose(f0);
-  fclose(f1);
-  fclose(f2);
-
-#endif
 
   /* Overwrite pre-k with z on re-encryption failure */
   for(int i = 0; i < 16; i++) {

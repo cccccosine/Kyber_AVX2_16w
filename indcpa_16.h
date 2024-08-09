@@ -29,7 +29,6 @@ void gen_matrix(polyvec_16 *a, const uint8_t seed[32*(2*16)], int transposed);
 #define indcpa_keypair KYBER_NAMESPACE(indcpa_keypair)
 void indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
                     uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]
-                    // uint16_t pkpvprint[KYBER_INDCPA_PUBLICKEYBYTES]
                     );
 
 #define indcpa_enc KYBER_NAMESPACE(indcpa_enc)
