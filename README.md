@@ -1,8 +1,12 @@
 # Kyber_AVX2_16w
 
-The work is the 16-way implementation of cryptographic scheme Kyber on AVX2.
+This is one of the artifacts of the paper titled "Multi-way High-throughput Implementation of Kyber", which has been accepted to [ISC 2024](https://isc24.cs.gmu.edu/). The other artifact is [the 32-way Implementation of Kyber on AVX512](https://github.com/cccccosine/Kyber_AVX512_32w).
 
-## How to run?
+## Platform
+Operating system: Ubuntu 22.04  
+CPU: 11th Gen Intel(R) Core(TM) i7-11700K CPU(Rocket Lake)  
+
+### How to run?
 
 Files:
 * main.c : clock cycles and throughput test file
